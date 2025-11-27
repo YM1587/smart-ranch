@@ -10,24 +10,61 @@ class HealthScreen extends StatefulWidget {
 }
 
 class _HealthScreenState extends State<HealthScreen> {
-  // For simplicity, this screen just lists animals to select for health records
-  // In a real app, you'd select an animal first.
-  // Here we will just show a placeholder or a list of recent events if we had an endpoint for all events.
-  // Let's just show a message for now as the requirement is to log events for specific animals.
-  
+  final ApiService apiService = ApiService();
+  List<HealthEvent> healthEvents = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHealthEvents();
+  }
+
+  Future<void> _loadHealthEvents() async {
+    try {
+      // Re-using the getRecentHealthEvents but maybe we want ALL events?
+      // For now, let's use the recent one or add a new method for ALL if needed.
+      // The backend endpoint /health/ supports pagination, so we can use that.
+      // Let's just use getRecentHealthEvents for now as a "Health Log".
+      final events = await apiService.getRecentHealthEvents(); 
+      setState(() {
+        healthEvents = events;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Health Monitoring')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.medical_services, size: 64, color: Colors.red),
-            SizedBox(height: 16),
-            Text('Select an animal from Inventory to view/add Health Records', textAlign: TextAlign.center),
-          ],
-        ),
+      appBar: AppBar(title: const Text('Health Overview')),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : healthEvents.isEmpty
+              ? const Center(child: Text("No health records found."))
+              : ListView.builder(
+                  itemCount: healthEvents.length,
+                  itemBuilder: (context, index) {
+                    final event = healthEvents[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        leading: const Icon(Icons.medical_services, color: Colors.red),
+                        title: Text(event.diagnosis),
+                        subtitle: Text("Date: ${event.date}\nTreatment: ${event.treatment}"),
+                        isThreeLine: true,
+                      ),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Go to Inventory and select an animal to add a record.")));
+        },
+        label: const Text("To Add Record, Go to Inventory"),
+        icon: const Icon(Icons.arrow_forward),
       ),
     );
   }

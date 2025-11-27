@@ -93,8 +93,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   title: Text('Tag: ${animal.tagNumber}'),
                   subtitle: Text('${animal.breed ?? "Unknown"} - ${animal.status}'),
                   trailing: const Icon(Icons.arrow_forward_ios),
+import 'animal_health_screen.dart';
+
+// ... (inside _InventoryScreenState)
+
                   onTap: () {
-                    // Navigate to details or health history
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AnimalHealthScreen(animal: animal),
+                      ),
+                    );
                   },
                 );
               },
