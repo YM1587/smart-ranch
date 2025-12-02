@@ -10,7 +10,6 @@ class FinanceScreen extends StatefulWidget {
 }
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  final ApiService apiService = ApiService();
   List<Expense> expenses = [];
   bool isLoading = true;
 
@@ -22,7 +21,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Future<void> _loadExpenses() async {
     try {
-      final data = await apiService.getExpenses();
+      final data = await ApiService.getExpenses();
       setState(() {
         expenses = data;
         isLoading = false;
@@ -60,7 +59,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   amount: double.parse(amountController.text),
                   expenseDate: dateController.text,
                 );
-                await apiService.createExpense(newExpense);
+                await ApiService.createExpense(newExpense);
                 Navigator.pop(context);
                 _loadExpenses();
               } catch (e) {

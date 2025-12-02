@@ -31,8 +31,9 @@ class Animal {
   final String? breed;
   final String? sex;
   final String? status;
+  final String? animalType;
 
-  Animal({required this.id, required this.tagNumber, this.penId, this.breed, this.sex, this.status});
+  Animal({required this.id, required this.tagNumber, this.penId, this.breed, this.sex, this.status, this.animalType});
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
@@ -42,6 +43,7 @@ class Animal {
       breed: json['breed'],
       sex: json['sex'],
       status: json['status'],
+      animalType: json['animal_type'],
     );
   }
 
@@ -52,6 +54,7 @@ class Animal {
       'breed': breed,
       'sex': sex,
       'status': status,
+      'animal_type': animalType,
     };
   }
 }

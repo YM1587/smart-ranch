@@ -1,15 +1,18 @@
 from fastapi import FastAPI
 from database import engine, Base
-from routers import animals, health, feed, finance
+from routers import animals, health, feed, finance, farmer, production, labor
 import asyncio
 
 app = FastAPI(title="Smart Ranch Management System API")
 
 # Include Routers
-app.include_router(animals.router, tags=["Animals & Pens"])
-app.include_router(health.router, tags=["Health"])
-app.include_router(feed.router, tags=["Feed"])
-app.include_router(finance.router, tags=["Finance"])
+app.include_router(farmer.router)
+app.include_router(animals.router)
+app.include_router(production.router)
+app.include_router(health.router)
+app.include_router(feed.router)
+app.include_router(labor.router)
+app.include_router(finance.router)
 
 @app.on_event("startup")
 async def startup():

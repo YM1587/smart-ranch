@@ -10,7 +10,6 @@ class HealthScreen extends StatefulWidget {
 }
 
 class _HealthScreenState extends State<HealthScreen> {
-  final ApiService apiService = ApiService();
   List<HealthEvent> healthEvents = [];
   bool isLoading = true;
 
@@ -22,11 +21,7 @@ class _HealthScreenState extends State<HealthScreen> {
 
   Future<void> _loadHealthEvents() async {
     try {
-      // Re-using the getRecentHealthEvents but maybe we want ALL events?
-      // For now, let's use the recent one or add a new method for ALL if needed.
-      // The backend endpoint /health/ supports pagination, so we can use that.
-      // Let's just use getRecentHealthEvents for now as a "Health Log".
-      final events = await apiService.getRecentHealthEvents(); 
+      final events = await ApiService.getRecentHealthEvents();
       setState(() {
         healthEvents = events;
         isLoading = false;
@@ -52,8 +47,8 @@ class _HealthScreenState extends State<HealthScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       child: ListTile(
                         leading: const Icon(Icons.medical_services, color: Colors.red),
-                        title: Text(event.diagnosis),
-                        subtitle: Text("Date: ${event.date}\nTreatment: ${event.treatment}"),
+                        title: Text(event.diagnosis ?? 'Unknown Diagnosis'),
+                        subtitle: Text("Date: ${event.eventDate}\nTreatment: ${event.treatment ?? 'None'}"),
                         isThreeLine: true,
                       ),
                     );

@@ -1,27 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-import database
+
+from database import get_db
 import models
 import schemas
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/health",
+    tags=["Health"]
+)
 
-@router.post("/health/", response_model=schemas.HealthEvent)
-async def create_health_event(event: schemas.HealthEventCreate, db: AsyncSession = Depends(database.get_db)):
-    db_event = models.HealthEvent(**event.dict())
-    db.add(db_event)
+@router.post("/", response_model=schemas.HealthRecord, status_code=status.HTTP_201_CREATED)
+async def create_health_record(record: schemas.HealthRecordCreate, db: AsyncSession = Depends(get_db)):
+    new_record = models.HealthRecord(**record.dict())
+    db.add(new_record)
     await db.commit()
-    await db.refresh(db_event)
-    return db_event
+    await db.refresh(new_record)
+    return new_record
 
-@router.get("/health/", response_model=List[schemas.HealthEvent])
-async def read_all_health_events(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(database.get_db)):
-    result = await db.execute(select(models.HealthEvent).order_by(models.HealthEvent.date.desc()).offset(skip).limit(limit))
-    return result.scalars().all()
-
-@router.get("/health/animal/{animal_id}", response_model=List[schemas.HealthEvent])
-async def read_health_events_by_animal(animal_id: int, db: AsyncSession = Depends(database.get_db)):
-    result = await db.execute(select(models.HealthEvent).where(models.HealthEvent.animal_id == animal_id))
+@router.get("/animal/{animal_id}", response_model=List[schemas.HealthRecord])
+async def read_health_records(animal_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.HealthRecord).where(models.HealthRecord.animal_id == animal_id))
     return result.scalars().all()

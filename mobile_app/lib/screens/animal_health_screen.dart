@@ -12,7 +12,6 @@ class AnimalHealthScreen extends StatefulWidget {
 }
 
 class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
-  final ApiService apiService = ApiService();
   List<HealthEvent> healthEvents = [];
   bool isLoading = true;
 
@@ -24,15 +23,13 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
 
   Future<void> _loadHealthEvents() async {
     try {
-      final events = await apiService.getHealthEvents(widget.animal.id);
+      final events = await ApiService.getHealthEvents(widget.animal.id);
       setState(() {
         healthEvents = events;
         isLoading = false;
       });
     } catch (e) {
       setState(() => isLoading = false);
-      // It's possible there are no events yet, or an error occurred.
-      // For now, we'll just show the empty list.
       print("Error loading health events: $e");
     }
   }
@@ -66,12 +63,13 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
                 final newEvent = HealthEvent(
                   id: 0,
                   animalId: widget.animal.id,
-                  date: dateController.text,
+                  eventDate: dateController.text,
+                  eventType: 'Checkup', // Default or add field
                   diagnosis: diagnosisController.text,
                   treatment: treatmentController.text,
-                  notes: notesController.text,
+                  // notes: notesController.text, // HealthEvent doesn't have notes in models.dart, check schema
                 );
-                await apiService.createHealthEvent(newEvent);
+                await ApiService.createHealthEvent(newEvent);
                 Navigator.pop(context);
                 _loadHealthEvents();
               } catch (e) {
@@ -122,8 +120,8 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
                             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             child: ListTile(
                               leading: const Icon(Icons.medical_services, color: Colors.red),
-                              title: Text(event.diagnosis),
-                              subtitle: Text("${event.date}\nTreatment: ${event.treatment}"),
+                              title: Text(event.diagnosis ?? 'Unknown'),
+                              subtitle: Text("${event.eventDate}\nTreatment: ${event.treatment ?? 'None'}"),
                               isThreeLine: true,
                             ),
                           );

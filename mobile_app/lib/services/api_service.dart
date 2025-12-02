@@ -2,144 +2,145 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
-import 'package:flutter/foundation.dart';
-
 class ApiService {
-  // Use 10.0.2.2 for Android emulator, localhost for Web/iOS
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000';
-    }
-    return 'http://10.0.2.2:8000';
-  } 
+  // Use 10.0.2.2 for Android emulator to access localhost of the host machine.
+  // If using a real device, use the IP address of your machine.
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
-  // --- PENS ---
-  Future<List<Pen>> getPens() async {
-    final response = await http.get(Uri.parse('$baseUrl/pens/'));
+  static Future<List<dynamic>> getPens(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/pens/?farmer_id=$farmerId'));
     if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => Pen.fromJson(item)).toList();
+      return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load pens');
     }
   }
 
-  Future<Pen> createPen(Pen pen) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/pens/'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(pen.toJson()),
-    );
-    if (response.statusCode == 200) {
-      return Pen.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to create pen');
+  static Future<List<Animal>> getAnimals([int? farmerId]) async {
+    String url = '$baseUrl/animals/';
+    if (farmerId != null) {
+      url += '?farmer_id=$farmerId';
     }
-  }
-
-  // --- ANIMALS ---
-  Future<List<Animal>> getAnimals() async {
-    final response = await http.get(Uri.parse('$baseUrl/animals/'));
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => Animal.fromJson(item)).toList();
+      Iterable l = jsonDecode(response.body);
+      return List<Animal>.from(l.map((model) => Animal.fromJson(model)));
     } else {
       throw Exception('Failed to load animals');
     }
   }
 
-  Future<Animal> createAnimal(Animal animal) async {
+  static Future<void> createAnimal(Map<String, dynamic> data) async {
+    await _post('animals', data);
+  }
+
+  static Future<void> createMilkProduction(Map<String, dynamic> data) async {
+    await _post('milk-production', data);
+  }
+
+  static Future<void> createWeightRecord(Map<String, dynamic> data) async {
+    await _post('weight-records', data);
+  }
+
+  static Future<void> createBreedingRecord(Map<String, dynamic> data) async {
+    await _post('breeding-records', data);
+  }
+
+  static Future<void> createFeedLog(Map<String, dynamic> data) async {
+    await _post('feed-logs', data);
+  }
+
+  static Future<void> createHealthRecord(Map<String, dynamic> data) async {
+    await _post('health-records', data);
+  }
+
+  static Future<void> createLaborActivity(Map<String, dynamic> data) async {
+    await _post('labor-activities', data);
+  }
+
+  static Future<void> createFinancialTransaction(Map<String, dynamic> data) async {
+    await _post('finance', data);
+  }
+
+  static Future<void> createFarmer(Map<String, dynamic> data) async {
+    await _post('farmers', data);
+  }
+
+  static Future<void> _post(String endpoint, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/animals/'),
+      Uri.parse('$baseUrl/$endpoint/'),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode(animal.toJson()),
+      body: jsonEncode(data),
     );
-    if (response.statusCode == 200) {
-      return Animal.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to create animal');
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to create record in $endpoint: ${response.body}');
     }
   }
 
-  // --- HEALTH ---
-  Future<List<HealthEvent>> getHealthEvents(int animalId) async {
-    final response = await http.get(Uri.parse('$baseUrl/health/animal/$animalId'));
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => HealthEvent.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load health events');
-    }
-  }
-
-  Future<List<HealthEvent>> getRecentHealthEvents() async {
-    final response = await http.get(Uri.parse('$baseUrl/health/?limit=5'));
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => HealthEvent.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load recent health events');
-    }
-  }
-
-  Future<HealthEvent> createHealthEvent(HealthEvent event) async {
+  static Future<Expense> createExpense(Expense expense) async {
+    final data = {
+      'farmer_id': 1, // Default
+      'type': 'Expense',
+      'category': expense.category,
+      'description': expense.description ?? '',
+      'amount': expense.amount,
+      'date': expense.expenseDate,
+    };
     final response = await http.post(
-      Uri.parse('$baseUrl/health/'),
+      Uri.parse('$baseUrl/finance/'),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode(event.toJson()),
+      body: jsonEncode(data),
     );
-    if (response.statusCode == 200) {
-      return HealthEvent.fromJson(jsonDecode(response.body));
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // The response is a FinancialTransaction, we need to map it back to Expense if we want to return Expense
+      final json = jsonDecode(response.body);
+      return Expense(
+        id: json['transaction_id'],
+        category: json['category'],
+        amount: (json['amount'] as num).toDouble(),
+        expenseDate: json['date'],
+        description: json['description'],
+      );
     } else {
-      throw Exception('Failed to create health event');
+      throw Exception('Failed to create expense');
     }
   }
 
-  // --- FEED ---
-  Future<List<FeedLog>> getFeedLogs(int penId) async {
-    final response = await http.get(Uri.parse('$baseUrl/feed/pen/$penId'));
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => FeedLog.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load feed logs');
-    }
+  static Future<List<HealthEvent>> getRecentHealthEvents() async {
+    // TODO: Implement backend endpoint for all/recent health events
+    return [];
   }
 
-  Future<FeedLog> createFeedLog(FeedLog log) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/feed/'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(log.toJson()),
-    );
+  static Future<List<Expense>> getExpenses([int? farmerId]) async {
+    farmerId ??= 1;
+    final response = await http.get(Uri.parse('$baseUrl/finance/farmer/$farmerId'));
     if (response.statusCode == 200) {
-      return FeedLog.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to create feed log');
-    }
-  }
-
-  // --- EXPENSES ---
-  Future<List<Expense>> getExpenses() async {
-    final response = await http.get(Uri.parse('$baseUrl/expenses/'));
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => Expense.fromJson(item)).toList();
+      Iterable l = jsonDecode(response.body);
+      return List<Expense>.from(l.map((json) => Expense(
+        id: json['transaction_id'],
+        category: json['category'],
+        amount: (json['amount'] as num).toDouble(),
+        expenseDate: json['date'],
+        description: json['description'],
+      )));
     } else {
       throw Exception('Failed to load expenses');
     }
   }
 
-  Future<Expense> createExpense(Expense expense) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/expenses/'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(expense.toJson()),
-    );
+  static Future<List<HealthEvent>> getHealthEvents(int animalId) async {
+    final response = await http.get(Uri.parse('$baseUrl/health/animal/$animalId'));
     if (response.statusCode == 200) {
-      return Expense.fromJson(jsonDecode(response.body));
+      Iterable l = jsonDecode(response.body);
+      return List<HealthEvent>.from(l.map((model) => HealthEvent.fromJson(model)));
     } else {
-      throw Exception('Failed to create expense');
+      throw Exception('Failed to load health events');
     }
+  }
+
+  static Future<void> createHealthEvent(HealthEvent event) async {
+    final data = event.toJson();
+    // Ensure date is sent as string if needed, or rely on toJson
+    await _post('health', data);
   }
 }

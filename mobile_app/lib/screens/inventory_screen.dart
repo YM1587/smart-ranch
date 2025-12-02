@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
+import 'animal_health_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -10,7 +11,6 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  final ApiService apiService = ApiService();
   List<Animal> animals = [];
   bool isLoading = true;
 
@@ -22,7 +22,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Future<void> _loadAnimals() async {
     try {
-      final data = await apiService.getAnimals();
+      final data = await ApiService.getAnimals();
       setState(() {
         animals = data;
         isLoading = false;
@@ -53,17 +53,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ElevatedButton(
             onPressed: () async {
               try {
-                final newAnimal = Animal(
-                  id: 0, // ID assigned by backend
-                  tagNumber: tagController.text,
-                  breed: breedController.text,
-                  status: 'Active',
-                );
-                await apiService.createAnimal(newAnimal);
+                final newAnimalMap = {
+                  'tag_number': tagController.text,
+                  'breed': breedController.text,
+                  'status': 'Active',
+                  'farmer_id': 1, // Default farmer ID for testing
+                  'animal_type': 'Dairy', // Default
+                  'gender': 'Female', // Default
+                  'acquisition_type': 'Born-on-farm', // Default
+                  'acquisition_cost': 0.0,
+                };
+                await ApiService.createAnimal(newAnimalMap);
                 Navigator.pop(context);
                 _loadAnimals();
               } catch (e) {
                 print(e);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             child: const Text('Add'),
@@ -93,10 +98,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   title: Text('Tag: ${animal.tagNumber}'),
                   subtitle: Text('${animal.breed ?? "Unknown"} - ${animal.status}'),
                   trailing: const Icon(Icons.arrow_forward_ios),
-import 'animal_health_screen.dart';
-
-// ... (inside _InventoryScreenState)
-
                   onTap: () {
                     Navigator.push(
                       context,
