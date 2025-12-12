@@ -4,8 +4,8 @@ import '../models/models.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android emulator to access localhost of the host machine.
-  // If using a real device, use the IP address of your machine.
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  // If using a real device, use the IP address of your machine via --dart-define=BASE_URL=...
+  static const String baseUrl = String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8000');
 
   static Future<List<dynamic>> getPens(int farmerId) async {
     final response = await http.get(Uri.parse('$baseUrl/pens/?farmer_id=$farmerId'));
