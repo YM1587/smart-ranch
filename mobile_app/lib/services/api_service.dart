@@ -2,10 +2,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
+import 'package:flutter/foundation.dart';
+
 class ApiService {
   // Use 10.0.2.2 for Android emulator to access localhost of the host machine.
+  // Use localhost for Web.
   // If using a real device, use the IP address of your machine via --dart-define=BASE_URL=...
-  static const String baseUrl = String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+  static String get baseUrl {
+    if (kIsWeb) {
+      return String.fromEnvironment('BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+    }
+    return String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+  }
 
   static Future<List<dynamic>> getPens(int farmerId) async {
     final response = await http.get(Uri.parse('$baseUrl/pens/?farmer_id=$farmerId'));

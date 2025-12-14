@@ -3,7 +3,17 @@ from database import engine, Base
 from routers import animals, health, feed, finance, farmer, production, labor
 import asyncio
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Smart Ranch Management System API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include Routers
 app.include_router(farmer.router)
