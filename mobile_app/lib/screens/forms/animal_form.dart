@@ -12,11 +12,17 @@ class AnimalForm extends StatefulWidget {
 class _AnimalFormState extends State<AnimalForm> {
   final _formKey = GlobalKey<FormState>();
   final _tagController = TextEditingController();
-  final _breedController = TextEditingController();
+  // final _breedController = TextEditingController(); // Removed
   final _costController = TextEditingController();
   String _animalType = 'Dairy';
   String _gender = 'Female';
   String _acquisitionType = 'Born-on-farm';
+  String _selectedBreed = 'Sahiwal';
+  final List<String> _breeds = [
+    'Sahiwal', 'Holstein', 'Jersey', 'Guernsey', 'Ayrshire', 'Friesian', // Dairy
+    'Angus', 'Hereford', 'Charolais', 'Simmental', 'Brahman', // Beef
+    'Other'
+  ];
   int? _selectedPenId;
   List<dynamic> _pens = [];
 
@@ -54,7 +60,7 @@ class _AnimalFormState extends State<AnimalForm> {
         'pen_id': _selectedPenId,
         'tag_number': _tagController.text,
         'animal_type': _animalType,
-        'breed': _breedController.text,
+        'breed': _selectedBreed,
         'gender': _gender,
         'acquisition_type': _acquisitionType,
         'acquisition_cost': double.tryParse(_costController.text) ?? 0.0,
@@ -192,10 +198,13 @@ class _AnimalFormState extends State<AnimalForm> {
                     .toList(),
                 onChanged: (value) => setState(() => _animalType = value!),
               ),
-              TextFormField(
-                controller: _breedController,
+              DropdownButtonFormField<String>(
+                value: _selectedBreed,
                 decoration: const InputDecoration(labelText: 'Breed'),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
+                items: _breeds
+                    .map((breed) => DropdownMenuItem(value: breed, child: Text(breed)))
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedBreed = value!),
               ),
               DropdownButtonFormField<String>(
                 value: _gender,
