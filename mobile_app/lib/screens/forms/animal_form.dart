@@ -79,6 +79,74 @@ class _AnimalFormState extends State<AnimalForm> {
     }
   }
 
+  Future<void> _showAddPenDialog() async {
+    final _penNameController = TextEditingController();
+    String _penType = 'Barn'; // Default
+    final _formKeyPen = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Pen'),
+          content: Form(
+            key: _formKeyPen,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _penNameController,
+                  decoration: const InputDecoration(labelText: 'Pen Name'),
+                  validator: (value) => value!.isEmpty ? 'Required' : null,
+                ),
+                DropdownButtonFormField<String>(
+                  value: _penType,
+                  decoration: const InputDecoration(labelText: 'Pen Type'),
+                  items: ['Barn', 'Pasture', 'Coop', 'Stall']
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
+                  onChanged: (v) => _penType = v!,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKeyPen.currentState!.validate()) {
+                  final data = {
+                    'farmer_id': widget.farmerId,
+                    'pen_name': _penNameController.text,
+                    'pen_type': _penType,
+                    'capacity': 100, // Default or add field
+                    'description': 'Created from Animal Form',
+                  };
+                  try {
+                    await ApiService.createPen(data);
+                    Navigator.pop(context);
+                    _loadPens(); // Refresh list
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Pen created!')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,18 +157,28 @@ class _AnimalFormState extends State<AnimalForm> {
           key: _formKey,
           child: ListView(
             children: [
-              DropdownButtonFormField<int>(
-                value: _selectedPenId,
-                decoration: const InputDecoration(labelText: 'Pen'),
-                items: _pens.map<DropdownMenuItem<int>>((pen) {
-                  return DropdownMenuItem<int>(
-                    value: pen['pen_id'],
-                    child: Text(pen['pen_name']),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => _selectedPenId = value),
-                validator: (value) => value == null ? 'Required' : null,
-              ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedPenId,
+                        decoration: const InputDecoration(labelText: 'Pen'),
+                        items: _pens.map<DropdownMenuItem<int>>((pen) {
+                          return DropdownMenuItem<int>(
+                            value: pen['pen_id'],
+                            child: Text(pen['pen_name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedPenId = value),
+                        validator: (value) => value == null ? 'Required' : null,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: _showAddPenDialog,
+                    ),
+                  ],
+                ),
               TextFormField(
                 controller: _tagController,
                 decoration: const InputDecoration(labelText: 'Tag Number'),

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import engine, Base
-from routers import animals, health, feed, finance, farmer, production, labor
+from routers import animals, health, feed, finance, farmer, production, labor, pens
 import asyncio
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +23,7 @@ app.include_router(health.router)
 app.include_router(feed.router)
 app.include_router(labor.router)
 app.include_router(finance.router)
+app.include_router(pens.router)
 
 @app.on_event("startup")
 async def startup():

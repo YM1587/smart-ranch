@@ -10,9 +10,9 @@ class ApiService {
   // If using a real device, use the IP address of your machine via --dart-define=BASE_URL=...
   static String get baseUrl {
     if (kIsWeb) {
-      return String.fromEnvironment('BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+      return 'http://127.0.0.1:8000';
     }
-    return String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+    return 'http://10.0.2.2:8000';
   }
 
   static Future<List<dynamic>> getPens(int farmerId) async {
@@ -22,6 +22,10 @@ class ApiService {
     } else {
       throw Exception('Failed to load pens');
     }
+  }
+
+  static Future<void> createPen(Map<String, dynamic> data) async {
+    await _post('pens', data);
   }
 
   static Future<List<Animal>> getAnimals([int? farmerId]) async {
