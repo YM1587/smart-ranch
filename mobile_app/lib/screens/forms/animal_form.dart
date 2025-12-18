@@ -203,7 +203,8 @@ class _AnimalFormState extends State<AnimalForm> {
               ),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Animal Name (Optional)'),
+                decoration: const InputDecoration(labelText: 'Animal Name'),
+                validator: (value) => value!.isEmpty ? 'Required' : null,
               ),
               DropdownButtonFormField<String>(
                 value: _animalType,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/models.dart';
 
 class BreedingRecordForm extends StatefulWidget {
   final int farmerId;
@@ -14,8 +15,8 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
   int? _selectedFemaleId;
   int? _selectedMaleId;
   String _breedingMethod = 'AI';
-  List<dynamic> _females = [];
-  List<dynamic> _males = [];
+  List<Animal> _females = [];
+  List<Animal> _males = [];
   bool _isLoading = false;
 
   @override
@@ -85,7 +86,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
                 items: _females.map<DropdownMenuItem<int>>((animal) {
                   return DropdownMenuItem<int>(
                     value: animal.id,
-                    child: Text('${animal.tagNumber} (${animal.breed})'),
+                    child: Text(animal.name ?? animal.tagNumber),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedFemaleId = value),
@@ -106,7 +107,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
                   items: _males.map<DropdownMenuItem<int>>((animal) {
                     return DropdownMenuItem<int>(
                       value: animal.id,
-                      child: Text('${animal.tagNumber} (${animal.breed})'),
+                      child: Text(animal.name ?? animal.tagNumber),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedMaleId = value),

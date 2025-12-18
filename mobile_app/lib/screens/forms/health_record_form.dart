@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/models.dart';
 
 class HealthRecordForm extends StatefulWidget {
   final int farmerId;
@@ -16,7 +17,7 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
   final _treatmentController = TextEditingController();
   final _costController = TextEditingController();
   int? _selectedAnimalId;
-  List<dynamic> _animals = [];
+  List<Animal> _animals = [];
   bool _isLoading = false;
 
   @override
@@ -31,7 +32,7 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
       setState(() {
         _animals = animals;
         if (_animals.isNotEmpty) {
-          _selectedAnimalId = _animals[0]['animal_id'];
+          _selectedAnimalId = _animals[0].id;
         }
       });
     } catch (e) {
@@ -87,8 +88,8 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
                 decoration: const InputDecoration(labelText: 'Animal'),
                 items: _animals.map<DropdownMenuItem<int>>((animal) {
                   return DropdownMenuItem<int>(
-                    value: animal['animal_id'],
-                    child: Text('${animal['tag_number']}'),
+                    value: animal.id,
+                    child: Text(animal.name ?? animal.tagNumber),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedAnimalId = value),
