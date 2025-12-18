@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import 'animal_health_screen.dart';
+import 'forms/animal_form.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -36,7 +37,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void _showAddAnimalDialog() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AnimalForm(farmerId: 1)),
+      MaterialPageRoute(builder: (context) => AnimalForm(farmerId: 1)),
     ).then((_) => _loadAnimals()); // Refresh after adding
   }
 
