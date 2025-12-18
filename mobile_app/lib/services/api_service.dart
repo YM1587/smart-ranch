@@ -47,27 +47,27 @@ class ApiService {
   }
 
   static Future<void> createMilkProduction(Map<String, dynamic> data) async {
-    await _post('milk-production', data);
+    await _post('production/milk', data);
   }
 
   static Future<void> createWeightRecord(Map<String, dynamic> data) async {
-    await _post('weight-records', data);
+    await _post('production/weight', data);
   }
 
   static Future<void> createBreedingRecord(Map<String, dynamic> data) async {
-    await _post('breeding-records', data);
+    await _post('production/breeding', data);
   }
 
   static Future<void> createFeedLog(Map<String, dynamic> data) async {
-    await _post('feed-logs', data);
+    await _post('feed/pen', data);
   }
 
   static Future<void> createHealthRecord(Map<String, dynamic> data) async {
-    await _post('health-records', data);
+    await _post('health', data);
   }
 
   static Future<void> createLaborActivity(Map<String, dynamic> data) async {
-    await _post('labor-activities', data);
+    await _post('labor', data);
   }
 
   static Future<void> createFinancialTransaction(Map<String, dynamic> data) async {
