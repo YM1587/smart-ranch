@@ -18,5 +18,14 @@ def check_animals():
     except Exception as e:
         print(f"Exception: {e}")
 
+def test_update():
+    try:
+        data = {"name": "Test Update"}
+        response = requests.put(f"{BASE_URL}/animals/4", json=data)
+        print(f"PUT /animals/4: {response.status_code}, {response.text}")
+    except Exception as e:
+        print(f"Exception in PUT: {e}")
+
 if __name__ == "__main__":
     check_animals()
+    test_update()
