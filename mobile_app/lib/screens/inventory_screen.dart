@@ -60,7 +60,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
               leading: const CircleAvatar(child: Icon(Icons.pets)),
               title: Text(animal.name != null && animal.name!.isNotEmpty ? animal.name! : animal.tagNumber),
               subtitle: Text('${animal.breed} - ${animal.status} ${animal.name != null && animal.name!.isNotEmpty ? "(${animal.tagNumber})" : ""}'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AnimalForm(farmerId: 1, animal: animal),
+                        ),
+                      );
+                      _loadAnimals();
+                    },
+                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 16),
+                ],
+              ),
                   onTap: () {
                     Navigator.push(
                       context,

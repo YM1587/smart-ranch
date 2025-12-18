@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/models.dart';
 
 class AnimalForm extends StatefulWidget {
   final int farmerId;
-  const AnimalForm({Key? key, required this.farmerId}) : super(key: key);
+  final Animal? animal;
+  const AnimalForm({Key? key, required this.farmerId, this.animal}) : super(key: key);
 
   @override
   _AnimalFormState createState() => _AnimalFormState();
@@ -32,6 +34,14 @@ class _AnimalFormState extends State<AnimalForm> {
   @override
   void initState() {
     super.initState();
+    if (widget.animal != null) {
+      _tagController.text = widget.animal!.tagNumber;
+      _nameController.text = widget.animal!.name ?? '';
+      _animalType = widget.animal!.animalType ?? 'Dairy';
+      _selectedBreed = widget.animal!.breed ?? 'Sahiwal';
+      _gender = widget.animal!.sex ?? 'Female';
+      _selectedPenId = widget.animal!.penId;
+    }
     _loadPens();
   }
 
@@ -79,10 +89,17 @@ class _AnimalFormState extends State<AnimalForm> {
       };
 
       try {
-        await ApiService.createAnimal(data);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Animal added successfully!')),
-        );
+        if (widget.animal != null) {
+          await ApiService.updateAnimal(widget.animal!.id, data);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Animal updated successfully!')),
+          );
+        } else {
+          await ApiService.createAnimal(data);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Animal added successfully!')),
+          );
+        }
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +184,7 @@ class _AnimalFormState extends State<AnimalForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Animal')),
+      appBar: AppBar(title: Text(widget.animal != null ? 'Edit Animal' : 'Add Animal')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -246,7 +263,7 @@ class _AnimalFormState extends State<AnimalForm> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
-                child: _isLoading ? const CircularProgressIndicator() : const Text('Add Animal'),
+                child: _isLoading ? const CircularProgressIndicator() : Text(widget.animal != null ? 'Update Animal' : 'Add Animal'),
               ),
             ],
           ),
