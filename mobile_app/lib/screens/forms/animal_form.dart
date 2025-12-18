@@ -12,6 +12,7 @@ class AnimalForm extends StatefulWidget {
 class _AnimalFormState extends State<AnimalForm> {
   final _formKey = GlobalKey<FormState>();
   final _tagController = TextEditingController();
+  final _nameController = TextEditingController();
   // final _breedController = TextEditingController(); // Removed
   final _costController = TextEditingController();
   String _animalType = 'Dairy';
@@ -68,6 +69,7 @@ class _AnimalFormState extends State<AnimalForm> {
         'farmer_id': widget.farmerId,
         'pen_id': _selectedPenId,
         'tag_number': _tagController.text,
+        'name': _nameController.text,
         'animal_type': _animalType,
         'breed': _selectedBreed,
         'gender': _gender,
@@ -198,6 +200,10 @@ class _AnimalFormState extends State<AnimalForm> {
                 controller: _tagController,
                 decoration: const InputDecoration(labelText: 'Tag Number'),
                 validator: (value) => value!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Animal Name (Optional)'),
               ),
               DropdownButtonFormField<String>(
                 value: _animalType,

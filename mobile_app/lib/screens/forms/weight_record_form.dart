@@ -123,7 +123,9 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
                 items: _filteredAnimals.map<DropdownMenuItem<int>>((animal) {
                   return DropdownMenuItem<int>(
                     value: animal.id,
-                    child: Text('${animal.tagNumber} (${animal.breed})'),
+                    child: Text(animal.name != null && animal.name!.isNotEmpty 
+                        ? '${animal.name} (${animal.tagNumber})' 
+                        : animal.tagNumber),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedAnimalId = value),

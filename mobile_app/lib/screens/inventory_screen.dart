@@ -56,11 +56,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
               itemCount: animals.length,
               itemBuilder: (context, index) {
                 final animal = animals[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text(animal.tagNumber.substring(0, 1))),
-                  title: Text('Tag: ${animal.tagNumber}'),
-                  subtitle: Text('${animal.breed ?? "Unknown"} - ${animal.status}'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
+            return ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.pets)),
+              title: Text(animal.name != null && animal.name!.isNotEmpty ? animal.name! : animal.tagNumber),
+              subtitle: Text('${animal.breed} - ${animal.status} ${animal.name != null && animal.name!.isNotEmpty ? "(${animal.tagNumber})" : ""}'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(
                       context,

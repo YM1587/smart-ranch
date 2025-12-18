@@ -92,7 +92,9 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
                 items: _animals.map<DropdownMenuItem<int>>((animal) {
                   return DropdownMenuItem<int>(
                     value: animal.id,
-                    child: Text('${animal.tagNumber} (${animal.breed})'),
+                    child: Text(animal.name != null && animal.name!.isNotEmpty 
+                        ? '${animal.name} (${animal.tagNumber})' 
+                        : animal.tagNumber),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedAnimalId = value),

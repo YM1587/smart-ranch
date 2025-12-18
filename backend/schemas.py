@@ -46,6 +46,7 @@ class AnimalBase(BaseModel):
     farmer_id: int
     pen_id: int
     tag_number: str
+    name: Optional[str] = None
     animal_type: str
     breed: str
     gender: str

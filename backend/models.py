@@ -45,6 +45,7 @@ class Animal(Base):
     farmer_id = Column(Integer, ForeignKey("farmer.farmer_id", ondelete="CASCADE"), nullable=False)
     pen_id = Column(Integer, ForeignKey("animal_pen.pen_id", ondelete="CASCADE"), nullable=False)
     tag_number = Column(String(50), nullable=False)
+    name = Column(String(100))
     animal_type = Column(String(10), nullable=False)
     breed = Column(String(50), nullable=False)
     gender = Column(String(10), nullable=False)

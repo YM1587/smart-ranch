@@ -27,18 +27,20 @@ class Pen {
 class Animal {
   final int id;
   final String tagNumber;
+  final String? name;
   final int? penId;
   final String? breed;
   final String? sex;
   final String? status;
   final String? animalType;
 
-  Animal({required this.id, required this.tagNumber, this.penId, this.breed, this.sex, this.status, this.animalType});
+  Animal({required this.id, required this.tagNumber, this.name, this.penId, this.breed, this.sex, this.status, this.animalType});
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
       id: json['animal_id'],
       tagNumber: json['tag_number'],
+      name: json['name'],
       penId: json['pen_id'],
       breed: json['breed'],
       sex: json['gender'],
@@ -50,6 +52,7 @@ class Animal {
   Map<String, dynamic> toJson() {
     return {
       'tag_number': tagNumber,
+      'name': name,
       'pen_id': penId,
       'breed': breed,
       'sex': sex,
