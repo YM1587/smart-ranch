@@ -46,6 +46,10 @@ class ApiService {
     await _post('animals', data);
   }
 
+  static Future<void> updateAnimal(int id, Map<String, dynamic> data) async {
+    await _put('animals/$id', data);
+  }
+
   static Future<void> createMilkProduction(Map<String, dynamic> data) async {
     await _post('production/milk', data);
   }
@@ -86,6 +90,17 @@ class ApiService {
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create record in $endpoint: ${response.body}');
+    }
+  }
+
+  static Future<void> _put(String endpoint, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/$endpoint'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update record in $endpoint: ${response.body}');
     }
   }
 
