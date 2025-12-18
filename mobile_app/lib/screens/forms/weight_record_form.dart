@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 
+import '../../models/models.dart';
+
 class WeightRecordForm extends StatefulWidget {
   final int farmerId;
   const WeightRecordForm({Key? key, required this.farmerId}) : super(key: key);
@@ -13,28 +15,47 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
   final _formKey = GlobalKey<FormState>();
   final _weightController = TextEditingController();
   final _bcsController = TextEditingController();
+  int? _selectedPenId;
   int? _selectedAnimalId;
-  List<dynamic> _animals = [];
+  List<Pen> _pens = [];
+  List<Animal> _allAnimals = [];
+  List<Animal> _filteredAnimals = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAnimals();
+    _loadData();
   }
 
-  Future<void> _loadAnimals() async {
+  Future<void> _loadData() async {
     try {
-      final animals = await ApiService.getAnimals(widget.farmerId);
+      final pensData = await ApiService.getPens(widget.farmerId);
+      final animalsData = await ApiService.getAnimals(widget.farmerId);
+      
       setState(() {
-        _animals = animals;
-        if (_animals.isNotEmpty) {
-          _selectedAnimalId = _animals[0]['animal_id'];
+        _pens = List<Pen>.from(pensData.map((p) => Pen.fromJson(p)));
+        _allAnimals = animalsData;
+        
+        if (_pens.isNotEmpty) {
+          _selectedPenId = _pens[0].id;
+          _filterAnimals(_selectedPenId!);
         }
       });
     } catch (e) {
       print(e);
     }
+  }
+
+  void _filterAnimals(int penId) {
+    setState(() {
+      _filteredAnimals = _allAnimals.where((a) => a.penId == penId).toList();
+      if (_filteredAnimals.isNotEmpty) {
+        _selectedAnimalId = _filteredAnimals[0].id;
+      } else {
+        _selectedAnimalId = null;
+      }
+    });
   }
 
   Future<void> _submitForm() async {
@@ -79,12 +100,30 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
           child: ListView(
             children: [
               DropdownButtonFormField<int>(
-                value: _selectedAnimalId,
-                decoration: const InputDecoration(labelText: 'Animal'),
-                items: _animals.map<DropdownMenuItem<int>>((animal) {
+                value: _selectedPenId,
+                decoration: const InputDecoration(labelText: 'Select Pen'),
+                items: _pens.map<DropdownMenuItem<int>>((pen) {
                   return DropdownMenuItem<int>(
-                    value: animal['animal_id'],
-                    child: Text('${animal['tag_number']}'),
+                    value: pen.id,
+                    child: Text(pen.name),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedPenId = value);
+                    _filterAnimals(value);
+                  }
+                },
+                validator: (value) => value == null ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _selectedAnimalId,
+                decoration: const InputDecoration(labelText: 'Select Animal'),
+                items: _filteredAnimals.map<DropdownMenuItem<int>>((animal) {
+                  return DropdownMenuItem<int>(
+                    value: animal.id,
+                    child: Text('${animal.tagNumber} (${animal.breed})'),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedAnimalId = value),
