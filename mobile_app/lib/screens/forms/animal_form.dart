@@ -55,6 +55,15 @@ class _AnimalFormState extends State<AnimalForm> {
         _isLoading = true;
       });
 
+      final selectedPen = _pens.firstWhere((p) => p['pen_id'] == _selectedPenId);
+      if (selectedPen['pen_name'].toString().toLowerCase() == 'milking parlor' && _gender == 'Male') {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Only female animals can be assigned to the Milking Parlor!')),
+        );
+        return;
+      }
+
       final data = {
         'farmer_id': widget.farmerId,
         'pen_id': _selectedPenId,

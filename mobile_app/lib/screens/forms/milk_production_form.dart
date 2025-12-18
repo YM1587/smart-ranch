@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 
+import '../../models/models.dart';
+
 class MilkProductionForm extends StatefulWidget {
   final int farmerId;
   const MilkProductionForm({Key? key, required this.farmerId}) : super(key: key);
@@ -14,7 +16,7 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
   final _morningYieldController = TextEditingController();
   final _eveningYieldController = TextEditingController();
   int? _selectedAnimalId;
-  List<dynamic> _animals = [];
+  List<Animal> _animals = [];
   bool _isLoading = false;
 
   @override
@@ -25,9 +27,15 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
 
   Future<void> _loadAnimals() async {
     try {
+      final pens = await ApiService.getPens(widget.farmerId);
       final animals = await ApiService.getAnimals(widget.farmerId);
+
+      // Find the ID of the "Milking Parlor" pen
+      final parlorPens = pens.where((p) => p['pen_name'].toString().toLowerCase() == 'milking parlor');
+      final parlorIds = parlorPens.map((p) => p['pen_id']).toSet();
+
       setState(() {
-        _animals = animals.where((a) => a.sex == 'Female' && a.animalType == 'Dairy').toList();
+        _animals = animals.where((a) => parlorIds.contains(a.penId)).toList();
         if (_animals.isNotEmpty) {
           _selectedAnimalId = _animals[0].id;
         }
