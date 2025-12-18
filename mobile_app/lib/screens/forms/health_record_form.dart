@@ -31,6 +31,7 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
       final animals = await ApiService.getAnimals(widget.farmerId);
       setState(() {
         _animals = animals;
+        _animals.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
         if (_animals.isNotEmpty) {
           _selectedAnimalId = _animals[0].id;
         }

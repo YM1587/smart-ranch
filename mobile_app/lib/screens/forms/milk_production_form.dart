@@ -36,6 +36,7 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
 
       setState(() {
         _animals = animals.where((a) => parlorIds.contains(a.penId)).toList();
+        _animals.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
         if (_animals.isNotEmpty) {
           _selectedAnimalId = _animals[0].id;
         }

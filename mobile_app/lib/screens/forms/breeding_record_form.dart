@@ -31,6 +31,8 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
       setState(() {
         _females = animals.where((a) => a.sex == 'Female').toList();
         _males = animals.where((a) => a.sex == 'Male').toList();
+        _females.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+        _males.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
         if (_females.isNotEmpty) _selectedFemaleId = _females[0].id;
       });
     } catch (e) {

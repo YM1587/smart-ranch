@@ -50,6 +50,7 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
   void _filterAnimals(int penId) {
     setState(() {
       _filteredAnimals = _allAnimals.where((a) => a.penId == penId).toList();
+      _filteredAnimals.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
       if (_filteredAnimals.isNotEmpty) {
         _selectedAnimalId = _filteredAnimals[0].id;
       } else {

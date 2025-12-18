@@ -65,3 +65,18 @@ async def read_animal(animal_id: int, db: AsyncSession = Depends(get_db)):
     if animal is None:
         raise HTTPException(status_code=404, detail="Animal not found")
     return animal
+
+@router.put("/{animal_id}", response_model=schemas.Animal)
+async def update_animal(animal_id: int, animal_update: schemas.AnimalUpdate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.Animal).where(models.Animal.animal_id == animal_id))
+    db_animal = result.scalars().first()
+    if db_animal is None:
+        raise HTTPException(status_code=404, detail="Animal not found")
+    
+    update_data = animal_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_animal, key, value)
+    
+    await db.commit()
+    await db.refresh(db_animal)
+    return db_animal

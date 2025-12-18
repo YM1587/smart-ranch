@@ -62,6 +62,22 @@ class AnimalBase(BaseModel):
 class AnimalCreate(AnimalBase):
     pass
 
+class AnimalUpdate(BaseModel):
+    pen_id: Optional[int] = None
+    tag_number: Optional[str] = None
+    name: Optional[str] = None
+    animal_type: Optional[str] = None
+    breed: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[date] = None
+    acquisition_type: Optional[str] = None
+    acquisition_cost: Optional[Decimal] = None
+    status: Optional[str] = None
+    disposal_reason: Optional[str] = None
+    disposal_date: Optional[date] = None
+    disposal_value: Optional[Decimal] = None
+    notes: Optional[str] = None
+
 class Animal(AnimalBase):
     animal_id: int
     created_at: datetime
