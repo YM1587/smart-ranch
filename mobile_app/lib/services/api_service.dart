@@ -128,13 +128,7 @@ class ApiService {
     final response = await http.get(Uri.parse('$baseUrl/finance/farmer/$farmerId'));
     if (response.statusCode == 200) {
       Iterable l = jsonDecode(response.body);
-      return List<Expense>.from(l.map((json) => Expense(
-        id: json['transaction_id'],
-        category: json['category'],
-        amount: (json['amount'] as num).toDouble(),
-        expenseDate: json['date'],
-        description: json['description'],
-      )));
+      return List<Expense>.from(l.map((json) => Expense.fromJson(json)));
     } else {
       throw Exception('Failed to load expenses');
     }

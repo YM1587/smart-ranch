@@ -8,9 +8,9 @@ class Pen {
 
   factory Pen.fromJson(Map<String, dynamic> json) {
     return Pen(
-      id: json['id'],
-      name: json['name'],
-      livestockType: json['livestock_type'],
+      id: json['pen_id'],
+      name: json['pen_name'],
+      livestockType: json['pen_type'],
       capacity: json['capacity'],
     );
   }
@@ -37,11 +37,11 @@ class Animal {
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
-      id: json['id'],
+      id: json['animal_id'],
       tagNumber: json['tag_number'],
       penId: json['pen_id'],
       breed: json['breed'],
-      sex: json['sex'],
+      sex: json['gender'],
       status: json['status'],
       animalType: json['animal_type'],
     );
@@ -80,11 +80,11 @@ class HealthEvent {
 
   factory HealthEvent.fromJson(Map<String, dynamic> json) {
     return HealthEvent(
-      id: json['id'],
+      id: json['record_id'],
       animalId: json['animal_id'],
-      eventDate: json['event_date'],
-      eventType: json['event_type'],
-      diagnosis: json['diagnosis'],
+      eventDate: json['date'],
+      eventType: json['condition'],
+      diagnosis: json['symptoms'],
       treatment: json['treatment'],
       cost: json['cost'] != null ? (json['cost'] as num).toDouble() : 0.0,
     );
@@ -121,12 +121,12 @@ class FeedLog {
 
   factory FeedLog.fromJson(Map<String, dynamic> json) {
     return FeedLog(
-      id: json['id'],
+      id: json['log_id'],
       penId: json['pen_id'],
-      logDate: json['log_date'],
+      logDate: json['date'],
       feedType: json['feed_type'],
       quantityKg: (json['quantity_kg'] as num).toDouble(),
-      cost: (json['cost'] as num).toDouble(),
+      cost: (json['total_cost'] as num).toDouble(),
     );
   }
 
@@ -158,10 +158,10 @@ class Expense {
 
   factory Expense.fromJson(Map<String, dynamic> json) {
     return Expense(
-      id: json['id'],
+      id: json['transaction_id'],
       category: json['category'],
       amount: (json['amount'] as num).toDouble(),
-      expenseDate: json['expense_date'],
+      expenseDate: json['date'],
       description: json['description'],
     );
   }

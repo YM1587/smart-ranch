@@ -22,7 +22,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Future<void> _loadAnimals() async {
     try {
-      final data = await ApiService.getAnimals();
+      final data = await ApiService.getAnimals(1); // Pass farmer ID
       setState(() {
         animals = data;
         isLoading = false;
@@ -34,48 +34,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showAddAnimalDialog() {
-    final tagController = TextEditingController();
-    final breedController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Animal'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: tagController, decoration: const InputDecoration(labelText: 'Tag Number')),
-            TextField(controller: breedController, decoration: const InputDecoration(labelText: 'Breed')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final newAnimalMap = {
-                  'tag_number': tagController.text,
-                  'breed': breedController.text,
-                  'status': 'Active',
-                  'farmer_id': 1, // Default farmer ID for testing
-                  'animal_type': 'Dairy', // Default
-                  'gender': 'Female', // Default
-                  'acquisition_type': 'Born-on-farm', // Default
-                  'acquisition_cost': 0.0,
-                };
-                await ApiService.createAnimal(newAnimalMap);
-                Navigator.pop(context);
-                _loadAnimals();
-              } catch (e) {
-                print(e);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AnimalForm(farmerId: 1)),
+    ).then((_) => _loadAnimals()); // Refresh after adding
   }
 
   @override

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List
+from typing import List, Optional
 
 from database import get_db
 import models
@@ -46,8 +46,16 @@ async def create_animal(animal: schemas.AnimalCreate, db: AsyncSession = Depends
     return new_animal
 
 @router.get("/farmer/{farmer_id}", response_model=List[schemas.Animal])
-async def read_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):
+async def read_animals_by_farmer(farmer_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Animal).where(models.Animal.farmer_id == farmer_id))
+    return result.scalars().all()
+
+@router.get("/", response_model=List[schemas.Animal])
+async def read_animals(farmer_id: Optional[int] = None, db: AsyncSession = Depends(get_db)):
+    if farmer_id:
+        result = await db.execute(select(models.Animal).where(models.Animal.farmer_id == farmer_id))
+    else:
+        result = await db.execute(select(models.Animal))
     return result.scalars().all()
 
 @router.get("/{animal_id}", response_model=schemas.Animal)
