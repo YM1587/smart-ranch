@@ -53,11 +53,32 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
 
   Future<void> _loadAnimals() async {
     try {
-      final animals = await ApiService.getAnimals(widget.farmerId);
+      final results = await Future.wait([
+        ApiService.getAnimals(widget.farmerId),
+        ApiService.getPens(widget.farmerId),
+      ]);
+      
+      final animals = results[0] as List<Animal>;
+      final pensJson = results[1] as List<dynamic>;
+      final pens = pensJson.map((j) => Pen.fromJson(j)).toList();
+
       setState(() {
         _allAnimals = animals;
-        _females = animals.where((a) => a.sex == 'Female').toList();
-        _males = animals.where((a) => a.sex == 'Male').toList();
+        
+        // Filter females: Must be Female AND in a "Dry Cow" pen
+        final dryCowPenIds = pens
+            .where((p) => p.name.toLowerCase().contains('dry cow'))
+            .map((p) => p.id)
+            .toSet();
+        _females = animals.where((a) => a.sex == 'Female' && dryCowPenIds.contains(a.penId)).toList();
+        
+        // Filter males: Must be Male AND in a "Bull" pen
+        final bullPenIds = pens
+            .where((p) => p.name.toLowerCase().contains('bull'))
+            .map((p) => p.id)
+            .toSet();
+        _males = animals.where((a) => a.sex == 'Male' && bullPenIds.contains(a.penId)).toList();
+
         _females.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
         _males.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
         
