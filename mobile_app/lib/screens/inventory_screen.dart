@@ -57,40 +57,40 @@ class _InventoryScreenState extends State<InventoryScreen> {
               itemCount: animals.length,
               itemBuilder: (context, index) {
                 final animal = animals[index];
-            return ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.pets)),
-              title: Text(animal.name != null && animal.name!.isNotEmpty ? animal.name! : animal.tagNumber),
-              subtitle: Text('${animal.breed} - ${animal.status} ${animal.name != null && animal.name!.isNotEmpty ? "(${animal.tagNumber})" : ""}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (animal.sex == 'Female')
-                    IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.pink),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BreedingHistoryScreen(animal: animal),
-                          ),
-                        );
-                      },
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AnimalForm(farmerId: 1, animal: animal),
+                return ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.pets)),
+                  title: Text(animal.name != null && animal.name!.isNotEmpty ? animal.name! : animal.tagNumber),
+                  subtitle: Text('${animal.breed} - ${animal.status} ${animal.name != null && animal.name!.isNotEmpty ? "(${animal.tagNumber})" : ""}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (animal.sex == 'Female')
+                        IconButton(
+                          icon: const Icon(Icons.favorite, color: Colors.pink),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BreedingHistoryScreen(animal: animal),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                      _loadAnimals();
-                    },
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AnimalForm(farmerId: 1, animal: animal),
+                            ),
+                          );
+                          _loadAnimals();
+                        },
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
                   ),
-                  const Icon(Icons.arrow_forward_ios, size: 16),
-                ],
-              ),
                   onTap: () {
                     Navigator.push(
                       context,

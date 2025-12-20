@@ -41,6 +41,8 @@ class _AnimalFormState extends State<AnimalForm> {
       _selectedBreed = widget.animal!.breed ?? 'Sahiwal';
       _gender = widget.animal!.sex ?? 'Female';
       _selectedPenId = widget.animal!.penId;
+      _acquisitionType = widget.animal!.acquisitionType ?? 'Born-on-farm';
+      _costController.text = widget.animal!.acquisitionCost?.toString() ?? '';
     }
     _loadPens();
   }
@@ -50,24 +52,35 @@ class _AnimalFormState extends State<AnimalForm> {
       final pens = await ApiService.getPens(widget.farmerId);
       setState(() {
         _pens = pens;
-        if (_pens.isNotEmpty) {
-          _selectedPenId = _pens[0]['pen_id'];
+        // If we are in edit mode, ensure the existing pen is in the list
+        bool exists = _pens.any((p) => p['pen_id'] == _selectedPenId);
+        if (!exists && _pens.isNotEmpty) {
+           // If the animal's pen isn't in the list (rare), default to first available
+           if (_selectedPenId == null) {
+             _selectedPenId = _pens[0]['pen_id'];
+           }
         }
       });
     } catch (e) {
-      // Handle error
-      print(e);
+      print("Error loading pens: $e");
     }
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate() && _selectedPenId != null) {
+    if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      final selectedPen = _pens.firstWhere((p) => p['pen_id'] == _selectedPenId);
-      if (selectedPen['pen_name'].toString().toLowerCase() == 'milking parlor' && _gender == 'Male') {
+      // Find selected pen safely
+      dynamic selectedPen;
+      try {
+        selectedPen = _pens.firstWhere((p) => p['pen_id'] == _selectedPenId);
+      } catch (e) {
+        selectedPen = null;
+      }
+
+      if (selectedPen != null && selectedPen['pen_name'].toString().toLowerCase() == 'milking parlor' && _gender == 'Male') {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Only female animals can be assigned to the Milking Parlor!')),
@@ -85,7 +98,6 @@ class _AnimalFormState extends State<AnimalForm> {
         'gender': _gender,
         'acquisition_type': _acquisitionType,
         'acquisition_cost': double.tryParse(_costController.text) ?? 0.0,
-        // Add date pickers later
       };
 
       try {

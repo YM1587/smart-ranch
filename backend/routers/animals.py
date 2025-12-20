@@ -65,8 +65,11 @@ async def update_animal(animal_id: int, animal_update: schemas.AnimalUpdate, db:
     if db_animal is None:
         raise HTTPException(status_code=404, detail="Animal not found")
     
+    print(f"DEBUG: Updating animal {animal_id}")
     update_data = animal_update.dict(exclude_unset=True)
+    print(f"DEBUG: Update data: {update_data}")
     for key, value in update_data.items():
+        print(f"DEBUG: Setting {key} = {value}")
         setattr(db_animal, key, value)
     
     await db.commit()

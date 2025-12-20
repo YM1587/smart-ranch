@@ -63,6 +63,7 @@ class AnimalCreate(AnimalBase):
     pass
 
 class AnimalUpdate(BaseModel):
+    farmer_id: Optional[int] = None
     pen_id: Optional[int] = None
     tag_number: Optional[str] = None
     name: Optional[str] = None

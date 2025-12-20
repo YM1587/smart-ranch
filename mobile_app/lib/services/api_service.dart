@@ -103,7 +103,7 @@ class ApiService {
       body: jsonEncode(data),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create record in $endpoint: ${response.body}');
+      throw Exception('Failed to create record in $endpoint (Status: ${response.statusCode}): ${response.body}');
     }
   }
 
@@ -114,7 +114,7 @@ class ApiService {
       body: jsonEncode(data),
     );
     if (response.statusCode != 200) {
-      throw Exception('Failed to update record in $endpoint: ${response.body}');
+      throw Exception('Failed to update record in $endpoint (Status: ${response.statusCode}): ${response.body}');
     }
   }
 

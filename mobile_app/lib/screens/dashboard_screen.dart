@@ -31,6 +31,7 @@ class DashboardScreen extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: [
               _buildActionButton(context, 'Add Animal', Icons.pets, () => AnimalForm(farmerId: farmerId)),
+              _buildActionButton(context, 'Inventory', Icons.inventory, () => const InventoryScreen()),
               _buildActionButton(context, 'Milk Record', Icons.water_drop, () => MilkProductionForm(farmerId: farmerId)),
               _buildActionButton(context, 'Weight Record', Icons.monitor_weight, () => WeightRecordForm(farmerId: farmerId)),
               _buildActionButton(context, 'Breeding', Icons.favorite, () => BreedingRecordForm(farmerId: farmerId)),

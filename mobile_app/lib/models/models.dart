@@ -33,8 +33,23 @@ class Animal {
   final String? sex;
   final String? status;
   final String? animalType;
+  final String? birthDate;
+  final String? acquisitionType;
+  final double? acquisitionCost;
 
-  Animal({required this.id, required this.tagNumber, this.name, this.penId, this.breed, this.sex, this.status, this.animalType});
+  Animal({
+    required this.id,
+    required this.tagNumber,
+    this.name,
+    this.penId,
+    this.breed,
+    this.sex,
+    this.status,
+    this.animalType,
+    this.birthDate,
+    this.acquisitionType,
+    this.acquisitionCost,
+  });
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
@@ -46,6 +61,9 @@ class Animal {
       sex: json['gender'],
       status: json['status'],
       animalType: json['animal_type'],
+      birthDate: json['birth_date'],
+      acquisitionType: json['acquisition_type'],
+      acquisitionCost: json['acquisition_cost'] != null ? (json['acquisition_cost'] as num).toDouble() : null,
     );
   }
 
@@ -55,9 +73,12 @@ class Animal {
       'name': name,
       'pen_id': penId,
       'breed': breed,
-      'sex': sex,
+      'gender': sex, // Use gender for backend
       'status': status,
       'animal_type': animalType,
+      'birth_date': birthDate,
+      'acquisition_type': acquisitionType,
+      'acquisition_cost': acquisitionCost,
     };
   }
 }
