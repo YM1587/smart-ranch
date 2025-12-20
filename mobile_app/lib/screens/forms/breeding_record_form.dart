@@ -65,12 +65,12 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
       setState(() {
         _allAnimals = animals;
         
-        // Filter females: Must be Female AND in a "Dry Cow" pen
-        final dryCowPenIds = pens
-            .where((p) => p.name.toLowerCase().contains('dry cow'))
+        // Filter females: Must be Female AND in a "Dry Cow" or "Milking" pen
+        final femalePenIds = pens
+            .where((p) => p.name.toLowerCase().contains('dry cow') || p.name.toLowerCase().contains('milking'))
             .map((p) => p.id)
             .toSet();
-        _females = animals.where((a) => a.sex == 'Female' && dryCowPenIds.contains(a.penId)).toList();
+        _females = animals.where((a) => a.sex == 'Female' && femalePenIds.contains(a.penId)).toList();
         
         // Filter males: Must be Male AND in a "Bull" pen
         final bullPenIds = pens
