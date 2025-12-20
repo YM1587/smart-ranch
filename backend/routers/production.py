@@ -59,3 +59,17 @@ async def read_breeding_records_by_animal(animal_id: int, db: AsyncSession = Dep
         )
     )
     return result.scalars().all()
+@router.put("/breeding/{breeding_id}", response_model=schemas.BreedingRecord)
+async def update_breeding_record(breeding_id: int, record: schemas.BreedingRecordUpdate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.BreedingRecord).where(models.BreedingRecord.breeding_id == breeding_id))
+    db_record = result.scalars().first()
+    if not db_record:
+        raise HTTPException(status_code=404, detail="Breeding record not found")
+    
+    update_data = record.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_record, key, value)
+    
+    await db.commit()
+    await db.refresh(db_record)
+    return db_record

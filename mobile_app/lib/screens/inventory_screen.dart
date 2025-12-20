@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import 'animal_health_screen.dart';
+import 'breeding_history_screen.dart';
 import 'forms/animal_form.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -63,6 +64,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (animal.sex == 'Female')
+                    IconButton(
+                      icon: const Icon(Icons.favorite, color: Colors.pink),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BreedingHistoryScreen(animal: animal),
+                          ),
+                        );
+                      },
+                    ),
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),
                     onPressed: () async {

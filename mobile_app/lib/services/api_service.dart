@@ -62,6 +62,20 @@ class ApiService {
     await _post('production/breeding', data);
   }
 
+  static Future<void> updateBreedingRecord(int id, Map<String, dynamic> data) async {
+    await _put('production/breeding/$id', data);
+  }
+
+  static Future<List<BreedingRecord>> getBreedingRecords(int animalId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/breeding/animal/$animalId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<BreedingRecord>.from(l.map((model) => BreedingRecord.fromJson(model)));
+    } else {
+      throw Exception('Failed to load breeding records');
+    }
+  }
+
   static Future<void> createFeedLog(Map<String, dynamic> data) async {
     await _post('feed/pen', data);
   }

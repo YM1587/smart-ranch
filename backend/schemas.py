@@ -139,6 +139,18 @@ class BreedingRecordBase(BaseModel):
     offspring_id: Optional[int] = None
     notes: Optional[str] = None
 
+class BreedingRecordUpdate(BaseModel):
+    female_id: Optional[int] = None
+    male_id: Optional[int] = None
+    breeding_date: Optional[date] = None
+    breeding_method: Optional[str] = None
+    pregnancy_status: Optional[str] = None
+    expected_calving_date: Optional[date] = None
+    actual_calving_date: Optional[date] = None
+    outcome: Optional[str] = None
+    offspring_id: Optional[int] = None
+    notes: Optional[str] = None
+
 class BreedingRecordCreate(BreedingRecordBase):
     pass
 

@@ -178,3 +178,61 @@ class Expense {
     };
   }
 }
+class BreedingRecord {
+  final int id;
+  final int femaleId;
+  final int? maleId;
+  final String breedingDate;
+  final String? breedingMethod;
+  final String? pregnancyStatus;
+  final String? expectedCalvingDate;
+  final String? actualCalvingDate;
+  final String? outcome;
+  final int? offspringId;
+  final String? notes;
+
+  BreedingRecord({
+    required this.id,
+    required this.femaleId,
+    this.maleId,
+    required this.breedingDate,
+    this.breedingMethod,
+    this.pregnancyStatus,
+    this.expectedCalvingDate,
+    this.actualCalvingDate,
+    this.outcome,
+    this.offspringId,
+    this.notes,
+  });
+
+  factory BreedingRecord.fromJson(Map<String, dynamic> json) {
+    return BreedingRecord(
+      id: json['breeding_id'],
+      femaleId: json['female_id'],
+      maleId: json['male_id'],
+      breedingDate: json['breeding_date'],
+      breedingMethod: json['breeding_method'],
+      pregnancyStatus: json['pregnancy_status'],
+      expectedCalvingDate: json['expected_calving_date'],
+      actualCalvingDate: json['actual_calving_date'],
+      outcome: json['outcome'],
+      offspringId: json['offspring_id'],
+      notes: json['notes'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'female_id': femaleId,
+      'male_id': maleId,
+      'breeding_date': breedingDate,
+      'breeding_method': breedingMethod,
+      'pregnancy_status': pregnancyStatus,
+      'expected_calving_date': expectedCalvingDate,
+      'actual_calving_date': actualCalvingDate,
+      'outcome': outcome,
+      'offspring_id': offspringId,
+      'notes': notes,
+    };
+  }
+}
