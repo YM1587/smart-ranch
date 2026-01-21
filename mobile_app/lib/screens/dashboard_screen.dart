@@ -38,7 +38,7 @@ class DashboardScreen extends StatelessWidget {
               _buildActionButton(context, 'Feed Log', Icons.grass, () => FeedLogForm(farmerId: farmerId)),
               _buildActionButton(context, 'Health', Icons.medical_services, () => HealthRecordForm(farmerId: farmerId)),
               _buildActionButton(context, 'Labor', Icons.work, () => LaborActivityForm(farmerId: farmerId)),
-              _buildActionButton(context, 'Finance', Icons.attach_money, () => FinancialTransactionForm(farmerId: farmerId)),
+              _buildActionButton(context, 'Finance', Icons.monetization_on, () => const FinanceScreen()),
               _buildActionButton(context, 'Register Farmer', Icons.person_add, () => const FarmerForm()),
             ],
           ),

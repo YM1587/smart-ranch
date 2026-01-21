@@ -63,7 +63,9 @@ class Animal {
       animalType: json['animal_type'],
       birthDate: json['birth_date'],
       acquisitionType: json['acquisition_type'],
-      acquisitionCost: json['acquisition_cost'] != null ? (json['acquisition_cost'] as num).toDouble() : null,
+      acquisitionCost: json['acquisition_cost'] != null 
+          ? double.tryParse(json['acquisition_cost'].toString()) 
+          : null,
     );
   }
 
@@ -110,7 +112,7 @@ class HealthEvent {
       eventType: json['condition'],
       diagnosis: json['symptoms'],
       treatment: json['treatment'],
-      cost: json['cost'] != null ? (json['cost'] as num).toDouble() : 0.0,
+      cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) ?? 0.0 : 0.0,
     );
   }
 
@@ -149,8 +151,8 @@ class FeedLog {
       penId: json['pen_id'],
       logDate: json['date'],
       feedType: json['feed_type'],
-      quantityKg: (json['quantity_kg'] as num).toDouble(),
-      cost: (json['total_cost'] as num).toDouble(),
+      quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
+      cost: double.tryParse(json['total_cost'].toString()) ?? 0.0,
     );
   }
 
@@ -193,7 +195,7 @@ class FinancialTransaction {
       id: json['transaction_id'],
       type: json['type'],
       category: json['category'],
-      amount: (json['amount'] as num).toDouble(),
+      amount: double.tryParse(json['amount'].toString()) ?? 0.0,
       date: json['date'],
       description: json['description'],
       relatedAnimalId: json['related_animal_id'],
