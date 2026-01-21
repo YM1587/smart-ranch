@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
+import 'forms/financial_transaction_form.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -10,92 +11,135 @@ class FinanceScreen extends StatefulWidget {
 }
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  List<Expense> expenses = [];
+  List<FinancialTransaction> transactions = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
+    _loadTransactions();
   }
 
-  Future<void> _loadExpenses() async {
+  Future<void> _loadTransactions() async {
     try {
-      final data = await ApiService.getExpenses();
+      final data = await ApiService.getFinancialTransactions();
       setState(() {
-        expenses = data;
+        transactions = data;
         isLoading = false;
       });
     } catch (e) {
       setState(() => isLoading = false);
+      print(e);
     }
   }
 
-  void _showAddExpenseDialog() {
-    final categoryController = TextEditingController();
-    final amountController = TextEditingController();
-    final dateController = TextEditingController(text: DateTime.now().toIso8601String().split('T')[0]);
+  @override
+  Widget build(BuildContext context) {
+    double totalIncome = 0;
+    double totalExpense = 0;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Expense'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Category (Feed, Medical, etc)')),
-            TextField(controller: amountController, decoration: const InputDecoration(labelText: 'Amount'), keyboardType: TextInputType.number),
-            TextField(controller: dateController, decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)')),
-          ],
-        ),
+    for (var t in transactions) {
+      if (t.type == 'Income') {
+        totalIncome += t.amount;
+      } else {
+        totalExpense += t.amount;
+      }
+    }
+
+    double netProfit = totalIncome - totalExpense;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Financial Overview'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
+          IconButton(
+            icon: const Icon(Icons.add), 
             onPressed: () async {
-              try {
-                final newExpense = Expense(
-                  id: 0,
-                  category: categoryController.text,
-                  amount: double.parse(amountController.text),
-                  expenseDate: dateController.text,
-                );
-                await ApiService.createExpense(newExpense);
-                Navigator.pop(context);
-                _loadExpenses();
-              } catch (e) {
-                print(e);
-              }
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FinancialTransactionForm(farmerId: 1)), // Default farmerId
+              );
+              _loadTransactions();
             },
-            child: const Text('Save'),
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _buildSummaryCards(totalIncome, totalExpense, netProfit),
+                const Divider(),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: transactions.length,
+                    itemBuilder: (context, index) {
+                      final t = transactions[index];
+                      final isIncome = t.type == 'Income';
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isIncome ? Colors.green[100] : Colors.red[100],
+                          child: Icon(
+                            isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                            color: isIncome ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        title: Text(t.category),
+                        subtitle: Text('${t.date}\n${t.description ?? ""}'),
+                        isThreeLine: true,
+                        trailing: Text(
+                          '${isIncome ? "+" : "-"} KES ${t.amount.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isIncome ? Colors.green : Colors.red,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSummaryCards(double income, double expense, double profit) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildCard('Income', income, Colors.green),
+          ),
+          Expanded(
+            child: _buildCard('Expenses', expense, Colors.red),
+          ),
+          Expanded(
+            child: _buildCard('Net Profit', profit, profit >= 0 ? Colors.blue : Colors.orange),
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Financials'),
-        actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _showAddExpenseDialog),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: expenses.length,
-              itemBuilder: (context, index) {
-                final expense = expenses[index];
-                return ListTile(
-                  leading: const Icon(Icons.attach_money, color: Colors.green),
-                  title: Text(expense.category),
-                  subtitle: Text(expense.expenseDate),
-                  trailing: Text('KES ${expense.amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                );
-              },
+  Widget _buildCard(String title, double amount, Color color) {
+    return Card(
+      elevation: 4,
+      color: color.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+        child: Column(
+          children: [
+            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(
+              '${amount.toStringAsFixed(0)}', // Compact display
+              style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold),
             ),
+          ],
+        ),
+      ),
     );
   }
 }
