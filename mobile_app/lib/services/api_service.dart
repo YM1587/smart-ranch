@@ -15,10 +15,11 @@ class ApiService {
     return 'http://10.0.2.2:8000';
   }
 
-  static Future<List<dynamic>> getPens(int farmerId) async {
+  static Future<List<Pen>> getPens(int farmerId) async {
     final response = await http.get(Uri.parse('$baseUrl/pens/?farmer_id=$farmerId'));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      Iterable l = jsonDecode(response.body);
+      return List<Pen>.from(l.map((model) => Pen.fromJson(model)));
     } else {
       throw Exception('Failed to load pens');
     }

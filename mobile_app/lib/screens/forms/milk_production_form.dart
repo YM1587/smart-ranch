@@ -31,8 +31,8 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
       final animals = await ApiService.getAnimals(widget.farmerId);
 
       // Find the ID of the "Milking Parlor" pen
-      final parlorPens = pens.where((p) => p['pen_name'].toString().toLowerCase() == 'milking parlor');
-      final parlorIds = parlorPens.map((p) => p['pen_id']).toSet();
+      final parlorPens = pens.where((p) => p.name.toLowerCase() == 'milking parlor');
+      final parlorIds = parlorPens.map((p) => p.id).toSet();
 
       setState(() {
         _animals = animals.where((a) => parlorIds.contains(a.penId)).toList();

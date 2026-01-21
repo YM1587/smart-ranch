@@ -30,11 +30,11 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
 
   Future<void> _loadData() async {
     try {
-      final pensData = await ApiService.getPens(widget.farmerId);
+      final pens = await ApiService.getPens(widget.farmerId);
       final animalsData = await ApiService.getAnimals(widget.farmerId);
       
       setState(() {
-        _pens = List<Pen>.from(pensData.map((p) => Pen.fromJson(p)));
+        _pens = pens;
         _allAnimals = animalsData;
         
         if (_pens.isNotEmpty) {

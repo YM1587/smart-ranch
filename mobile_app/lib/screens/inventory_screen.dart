@@ -77,6 +77,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           },
                         ),
                       IconButton(
+                        icon: const Icon(Icons.medical_services, color: Colors.red),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AnimalHealthScreen(animal: animal),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () async {
                           await Navigator.push(
