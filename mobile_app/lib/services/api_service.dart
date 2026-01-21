@@ -88,9 +88,6 @@ class ApiService {
     await _post('labor', data);
   }
 
-  static Future<void> createFinancialTransaction(Map<String, dynamic> data) async {
-    await _post('finance', data);
-  }
 
   static Future<void> createFarmer(Map<String, dynamic> data) async {
     await _post('farmers', data);
