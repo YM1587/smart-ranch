@@ -118,32 +118,19 @@ class ApiService {
     }
   }
 
-  static Future<Expense> createExpense(Expense expense) async {
-    final data = {
-      'farmer_id': 1, // Default
-      'type': 'Expense',
-      'category': expense.category,
-      'description': expense.description ?? '',
-      'amount': expense.amount,
-      'date': expense.expenseDate,
-    };
+  static Future<FinancialTransaction> createFinancialTransaction(FinancialTransaction transaction) async {
+    final data = transaction.toJson();
+    data['farmer_id'] = 1; // Default
     final response = await http.post(
       Uri.parse('$baseUrl/finance/'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(data),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // The response is a FinancialTransaction, we need to map it back to Expense if we want to return Expense
       final json = jsonDecode(response.body);
-      return Expense(
-        id: json['transaction_id'],
-        category: json['category'],
-        amount: (json['amount'] as num).toDouble(),
-        expenseDate: json['date'],
-        description: json['description'],
-      );
+      return FinancialTransaction.fromJson(json);
     } else {
-      throw Exception('Failed to create expense');
+      throw Exception('Failed to create transaction (Status: ${response.statusCode}): ${response.body}');
     }
   }
 
@@ -152,14 +139,14 @@ class ApiService {
     return [];
   }
 
-  static Future<List<Expense>> getExpenses([int? farmerId]) async {
+  static Future<List<FinancialTransaction>> getFinancialTransactions([int? farmerId]) async {
     farmerId ??= 1;
     final response = await http.get(Uri.parse('$baseUrl/finance/farmer/$farmerId'));
     if (response.statusCode == 200) {
       Iterable l = jsonDecode(response.body);
-      return List<Expense>.from(l.map((json) => Expense.fromJson(json)));
+      return List<FinancialTransaction>.from(l.map((json) => FinancialTransaction.fromJson(json)));
     } else {
-      throw Exception('Failed to load expenses');
+      throw Exception('Failed to load transactions');
     }
   }
 

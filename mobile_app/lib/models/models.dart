@@ -165,37 +165,53 @@ class FeedLog {
   }
 }
 
-class Expense {
+class FinancialTransaction {
   final int id;
+  final String type; // 'Income' or 'Expense'
   final String category;
   final double amount;
-  final String expenseDate;
+  final String date;
   final String? description;
+  final int? relatedAnimalId;
+  final int? relatedPenId;
+  final String? notes;
 
-  Expense({
+  FinancialTransaction({
     required this.id,
+    required this.type,
     required this.category,
     required this.amount,
-    required this.expenseDate,
+    required this.date,
     this.description,
+    this.relatedAnimalId,
+    this.relatedPenId,
+    this.notes,
   });
 
-  factory Expense.fromJson(Map<String, dynamic> json) {
-    return Expense(
+  factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
+    return FinancialTransaction(
       id: json['transaction_id'],
+      type: json['type'],
       category: json['category'],
       amount: (json['amount'] as num).toDouble(),
-      expenseDate: json['date'],
+      date: json['date'],
       description: json['description'],
+      relatedAnimalId: json['related_animal_id'],
+      relatedPenId: json['related_pen_id'],
+      notes: json['notes'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'type': type,
       'category': category,
       'amount': amount,
-      'expense_date': expenseDate,
+      'date': date,
       'description': description,
+      'related_animal_id': relatedAnimalId,
+      'related_pen_id': relatedPenId,
+      'notes': notes,
     };
   }
 }

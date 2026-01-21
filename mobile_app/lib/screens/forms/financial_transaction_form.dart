@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/models.dart';
 
 class FinancialTransactionForm extends StatefulWidget {
   final int farmerId;
@@ -21,8 +22,8 @@ class _FinancialTransactionFormState extends State<FinancialTransactionForm> {
     'Milk Sales', 'Animal Sales', 'Manure Sales', 'Breeding Services'
   ];
   final List<String> _expenseCategories = [
-    'Feed', 'Veterinary', 'Labor', 'Medication', 'Transport', 
-    'Breeding Costs', 'Equipment', 'Utilities', 'Other'
+    'Feed', 'Veterinary', 'Labor', 'Transport', 'Equipment', 
+    'Utilities', 'Breeding Costs', 'Medication', 'Other'
   ];
 
   Future<void> _submitForm() async {
@@ -31,17 +32,18 @@ class _FinancialTransactionFormState extends State<FinancialTransactionForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'farmer_id': widget.farmerId,
-        'type': _type,
-        'category': _category,
-        'description': _descriptionController.text,
-        'amount': double.tryParse(_amountController.text) ?? 0.0,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-      };
+      final transaction = FinancialTransaction(
+        id: 0, // Backend assigns ID
+        type: _type,
+        category: _category,
+        description: _descriptionController.text,
+        amount: double.tryParse(_amountController.text) ?? 0.0,
+        date: DateTime.now().toIso8601String().split('T')[0],
+        // farmer_id will be handled by ApiService or backend defaults
+      );
 
       try {
-        await ApiService.createFinancialTransaction(data);
+        await ApiService.createFinancialTransaction(transaction);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transaction added successfully!')),
         );
