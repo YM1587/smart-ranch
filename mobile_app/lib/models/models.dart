@@ -8,10 +8,10 @@ class Pen {
 
   factory Pen.fromJson(Map<String, dynamic> json) {
     return Pen(
-      id: json['pen_id'],
+      id: int.tryParse(json['pen_id'].toString()) ?? 0,
       name: json['pen_name'],
       livestockType: json['pen_type'],
-      capacity: json['capacity'],
+      capacity: json['capacity'] != null ? int.tryParse(json['capacity'].toString()) : null,
     );
   }
 
@@ -53,10 +53,10 @@ class Animal {
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
-      id: json['animal_id'],
+      id: int.tryParse(json['animal_id'].toString()) ?? 0,
       tagNumber: json['tag_number'],
       name: json['name'],
-      penId: json['pen_id'],
+      penId: json['pen_id'] != null ? int.tryParse(json['pen_id'].toString()) : null,
       breed: json['breed'],
       sex: json['gender'],
       status: json['status'],
@@ -106,8 +106,8 @@ class HealthEvent {
 
   factory HealthEvent.fromJson(Map<String, dynamic> json) {
     return HealthEvent(
-      id: json['record_id'],
-      animalId: json['animal_id'],
+      id: int.tryParse(json['record_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
       eventDate: json['date'],
       eventType: json['condition'],
       diagnosis: json['symptoms'],
@@ -147,8 +147,8 @@ class FeedLog {
 
   factory FeedLog.fromJson(Map<String, dynamic> json) {
     return FeedLog(
-      id: json['log_id'],
-      penId: json['pen_id'],
+      id: int.tryParse(json['log_id'].toString()) ?? 0,
+      penId: int.tryParse(json['pen_id'].toString()) ?? 0,
       logDate: json['date'],
       feedType: json['feed_type'],
       quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
@@ -192,14 +192,14 @@ class FinancialTransaction {
 
   factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
     return FinancialTransaction(
-      id: json['transaction_id'],
+      id: int.tryParse(json['transaction_id'].toString()) ?? 0,
       type: json['type'],
       category: json['category'],
       amount: double.tryParse(json['amount'].toString()) ?? 0.0,
       date: json['date'],
       description: json['description'],
-      relatedAnimalId: json['related_animal_id'],
-      relatedPenId: json['related_pen_id'],
+      relatedAnimalId: json['related_animal_id'] != null ? int.tryParse(json['related_animal_id'].toString()) : null,
+      relatedPenId: json['related_pen_id'] != null ? int.tryParse(json['related_pen_id'].toString()) : null,
       notes: json['notes'],
     );
   }
@@ -246,16 +246,16 @@ class BreedingRecord {
 
   factory BreedingRecord.fromJson(Map<String, dynamic> json) {
     return BreedingRecord(
-      id: json['breeding_id'],
-      femaleId: json['female_id'],
-      maleId: json['male_id'],
+      id: int.tryParse(json['breeding_id'].toString()) ?? 0,
+      femaleId: int.tryParse(json['female_id'].toString()) ?? 0,
+      maleId: json['male_id'] != null ? int.tryParse(json['male_id'].toString()) : null,
       breedingDate: json['breeding_date'],
       breedingMethod: json['breeding_method'],
       pregnancyStatus: json['pregnancy_status'],
       expectedCalvingDate: json['expected_calving_date'],
       actualCalvingDate: json['actual_calving_date'],
       outcome: json['outcome'],
-      offspringId: json['offspring_id'],
+      offspringId: json['offspring_id'] != null ? int.tryParse(json['offspring_id'].toString()) : null,
       notes: json['notes'],
     );
   }
