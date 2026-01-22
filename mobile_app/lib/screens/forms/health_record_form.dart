@@ -16,29 +16,48 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
   final _symptomsController = TextEditingController();
   final _treatmentController = TextEditingController();
   final _costController = TextEditingController();
+  int? _selectedPenId;
   int? _selectedAnimalId;
-  List<Animal> _animals = [];
+  List<Pen> _pens = [];
+  List<Animal> _allAnimals = [];
+  List<Animal> _filteredAnimals = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAnimals();
+    _loadData();
   }
 
-  Future<void> _loadAnimals() async {
+  Future<void> _loadData() async {
     try {
-      final animals = await ApiService.getAnimals(widget.farmerId);
+      final pens = await ApiService.getPens(widget.farmerId);
+      final animalsData = await ApiService.getAnimals(widget.farmerId);
+      
       setState(() {
-        _animals = animals;
-        _animals.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
-        if (_animals.isNotEmpty) {
-          _selectedAnimalId = _animals[0].id;
+        _pens = pens;
+        _allAnimals = animalsData;
+        
+        if (_pens.isNotEmpty) {
+          _selectedPenId = _pens[0].id;
+          _filterAnimals(_selectedPenId!);
         }
       });
     } catch (e) {
       print(e);
     }
+  }
+
+  void _filterAnimals(int penId) {
+    setState(() {
+      _filteredAnimals = _allAnimals.where((a) => a.penId == penId).toList();
+      _filteredAnimals.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+      if (_filteredAnimals.isNotEmpty) {
+        _selectedAnimalId = _filteredAnimals[0].id;
+      } else {
+        _selectedAnimalId = null;
+      }
+    });
   }
 
   Future<void> _submitForm() async {
@@ -85,9 +104,27 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
           child: ListView(
             children: [
               DropdownButtonFormField<int>(
+                value: _selectedPenId,
+                decoration: const InputDecoration(labelText: 'Select Pen'),
+                items: _pens.map<DropdownMenuItem<int>>((pen) {
+                  return DropdownMenuItem<int>(
+                    value: pen.id,
+                    child: Text(pen.name),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedPenId = value);
+                    _filterAnimals(value);
+                  }
+                },
+                validator: (value) => value == null ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
                 value: _selectedAnimalId,
-                decoration: const InputDecoration(labelText: 'Animal'),
-                items: _animals.map<DropdownMenuItem<int>>((animal) {
+                decoration: const InputDecoration(labelText: 'Select Animal'),
+                items: _filteredAnimals.map<DropdownMenuItem<int>>((animal) {
                   return DropdownMenuItem<int>(
                     value: animal.id,
                     child: Text(animal.name ?? animal.tagNumber),

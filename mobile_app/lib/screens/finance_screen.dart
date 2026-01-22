@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../models/models.dart';
-import 'forms/financial_transaction_form.dart';
+import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
+
+enum TimeRange { today, week, month, year, all }
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -11,8 +11,10 @@ class FinanceScreen extends StatefulWidget {
 }
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  List<FinancialTransaction> transactions = [];
-  bool isLoading = true;
+  List<FinancialTransaction> _allTransactions = [];
+  List<FinancialTransaction> _filteredTransactions = [];
+  bool _isLoading = true;
+  TimeRange _selectedRange = TimeRange.month;
 
   @override
   void initState() {
@@ -24,13 +26,39 @@ class _FinanceScreenState extends State<FinanceScreen> {
     try {
       final data = await ApiService.getFinancialTransactions();
       setState(() {
-        transactions = data;
-        isLoading = false;
+        _allTransactions = data;
+        _filterTransactions();
+        _isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
-      print(e);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
+  }
+
+  void _filterTransactions() {
+    final now = DateTime.now();
+    setState(() {
+      _filteredTransactions = _allTransactions.where((t) {
+        final tDate = DateTime.tryParse(t.date) ?? DateTime(1970);
+        switch (_selectedRange) {
+          case TimeRange.today:
+            return tDate.year == now.year && tDate.month == now.month && tDate.day == now.day;
+          case TimeRange.week:
+            final weekStart = now.subtract(Duration(days: now.weekday - 1));
+            return tDate.isAfter(weekStart.subtract(const Duration(seconds: 1)));
+          case TimeRange.month:
+            return tDate.year == now.year && tDate.month == now.month;
+          case TimeRange.year:
+            return tDate.year == now.year;
+          case TimeRange.all:
+            return true;
+        }
+      }).toList();
+      _filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
+    });
   }
 
   @override
@@ -38,7 +66,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     double totalIncome = 0;
     double totalExpense = 0;
 
-    for (var t in transactions) {
+    for (var t in _filteredTransactions) {
       if (t.type == 'Income') {
         totalIncome += t.amount;
       } else {
@@ -47,99 +75,191 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
 
     double netProfit = totalIncome - totalExpense;
+    double profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Financial Overview'),
+        title: const Text('Financial Dashboard'),
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add), 
+            icon: const Icon(Icons.add_chart), 
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const FinancialTransactionForm(farmerId: 1)), // Default farmerId
+                MaterialPageRoute(builder: (context) => const FinancialTransactionForm(farmerId: 1)),
               );
               _loadTransactions();
             },
           ),
         ],
       ),
-      body: isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSummaryCards(totalIncome, totalExpense, netProfit),
-                const Divider(),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) {
-                      final t = transactions[index];
-                      final isIncome = t.type == 'Income';
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isIncome ? Colors.green[100] : Colors.red[100],
-                          child: Icon(
-                            isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                            color: isIncome ? Colors.green : Colors.red,
-                          ),
-                        ),
-                        title: Text(t.category),
-                        subtitle: Text('${t.date}\n${t.description ?? ""}'),
-                        isThreeLine: true,
-                        trailing: Text(
-                          '${isIncome ? "+" : "-"} KES ${t.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isIncome ? Colors.green : Colors.red,
-                            fontSize: 16,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+          : RefreshIndicator(
+              onRefresh: _loadTransactions,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildRangeSelector(),
+                    _buildSummaryGrid(totalIncome, totalExpense, netProfit, profitMargin),
+                    _buildInsights(totalIncome, totalExpense, netProfit),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    ),
+                    _buildTransactionList(),
+                  ],
                 ),
-              ],
+              ),
             ),
     );
   }
 
-  Widget _buildSummaryCards(double income, double expense, double profit) {
+  Widget _buildRangeSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: TimeRange.values.map((range) {
+            final isSelected = _selectedRange == range;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: ChoiceChip(
+                label: Text(range.name.toUpperCase()),
+                selected: isSelected,
+                onSelected: (val) {
+                  if (val) {
+                    setState(() => _selectedRange = range);
+                    _filterTransactions();
+                  }
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryGrid(double income, double expense, double profit, double margin) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
         children: [
-          Expanded(
-            child: _buildCard('Income', income, Colors.green),
+          Row(
+            children: [
+              Expanded(child: _buildMetricCard('TOTAL INCOME', income, Icons.trending_up, Colors.green)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildMetricCard('TOTAL EXPENSE', expense, Icons.trending_down, Colors.red)),
+            ],
           ),
-          Expanded(
-            child: _buildCard('Expenses', expense, Colors.red),
-          ),
-          Expanded(
-            child: _buildCard('Net Profit', profit, profit >= 0 ? Colors.blue : Colors.orange),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildMetricCard('NET PROFIT', profit, Icons.account_balance_wallet, profit >= 0 ? Colors.blue : Colors.orange)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildMetricCard('MARGIN', margin, Icons.pie_chart, Colors.purple, isPercent: true)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCard(String title, double amount, Color color) {
-    return Card(
-      elevation: 4,
-      color: color.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-        child: Column(
-          children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(
-              '${amount.toStringAsFixed(0)}', // Compact display
+  Widget _buildMetricCard(String title, double value, IconData icon, Color color, {bool isPercent = false}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: 4),
+              Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 11, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            child: Text(
+              isPercent ? '${value.toStringAsFixed(1)}%' : 'KES ${NumberFormat("#,##0").format(value)}',
               style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildInsights(double income, double expense, double profit) {
+    List<Widget> insights = [];
+    if (expense > income && income > 0) {
+      insights.add(_insightRow('⚠️ Expenses exceed income. Check feed costs.', Colors.orange));
+    }
+    if (profit < 0) {
+      insights.add(_insightRow('🚨 Net loss recorded for this period.', Colors.red));
+    }
+    if (income == 0 && !_isLoading) {
+      insights.add(_insightRow('ℹ️ No income recorded for this period.', Colors.blueGrey));
+    }
+
+    if (insights.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+      child: Column(children: insights),
+    );
+  }
+
+  Widget _insightRow(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(children: [
+        Icon(Icons.info_outline, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 13))),
+      ]),
+    );
+  }
+
+  Widget _buildTransactionList() {
+    if (_filteredTransactions.isEmpty) {
+      return const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No transactions for this range.')));
+    }
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _filteredTransactions.length,
+      separatorBuilder: (c, i) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final t = _filteredTransactions[index];
+        final isIncome = t.type == 'Income';
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: isIncome ? Colors.green[50] : Colors.red[50],
+            child: Icon(isIncome ? Icons.add : Icons.remove, color: isIncome ? Colors.green : Colors.red, size: 18),
+          ),
+          title: Text(t.category, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text('${t.date} • ${t.description ?? "No description"}'),
+          trailing: Text(
+            '${isIncome ? "+" : "-"} ${t.amount.toStringAsFixed(0)}',
+            style: TextStyle(fontWeight: FontWeight.bold, color: isIncome ? Colors.green : Colors.red),
+          ),
+        );
+      },
     );
   }
 }
