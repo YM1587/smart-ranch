@@ -163,4 +163,69 @@ class ApiService {
     // Ensure date is sent as string if needed, or rely on toJson
     await _post('health', data);
   }
+
+  // --- FARM-WIDE ANALYTICS FETCHERS ---
+
+  static Future<List<HealthEvent>> getAllHealthEvents(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/health/farmer/$farmerId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<HealthEvent>.from(l.map((model) => HealthEvent.fromJson(model)));
+    }
+    throw Exception('Failed to load farm health records');
+  }
+
+  static Future<List<FeedLog>> getPenFeedLogs(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/feed/farmer/$farmerId/pen'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<FeedLog>.from(l.map((model) => FeedLog.fromJson(model)));
+    }
+    throw Exception('Failed to load pen feed logs');
+  }
+
+  static Future<List<IndividualFeedLog>> getIndividualFeedLogs(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/feed/farmer/$farmerId/individual'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<IndividualFeedLog>.from(l.map((model) => IndividualFeedLog.fromJson(model)));
+    }
+    throw Exception('Failed to load individual feed logs');
+  }
+
+  static Future<List<MilkProduction>> getAllMilkProduction(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/milk/farmer/$farmerId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<MilkProduction>.from(l.map((model) => MilkProduction.fromJson(model)));
+    }
+    throw Exception('Failed to load milk production');
+  }
+
+  static Future<List<WeightRecord>> getAllWeightRecords(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/weight/farmer/$farmerId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<WeightRecord>.from(l.map((model) => WeightRecord.fromJson(model)));
+    }
+    throw Exception('Failed to load weight records');
+  }
+
+  static Future<List<BreedingRecord>> getAllBreedingRecords(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/breeding/farmer/$farmerId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<BreedingRecord>.from(l.map((model) => BreedingRecord.fromJson(model)));
+    }
+    throw Exception('Failed to load breeding records');
+  }
+
+  static Future<List<LaborActivity>> getAllLaborActivities(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/labor/farmer/$farmerId'));
+    if (response.statusCode == 200) {
+      Iterable l = jsonDecode(response.body);
+      return List<LaborActivity>.from(l.map((model) => LaborActivity.fromJson(model)));
+    }
+    throw Exception('Failed to load labor activities');
+  }
 }

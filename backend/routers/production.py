@@ -59,6 +59,33 @@ async def read_breeding_records_by_animal(animal_id: int, db: AsyncSession = Dep
         )
     )
     return result.scalars().all()
+
+@router.get("/milk/farmer/{farmer_id}", response_model=List[schemas.MilkProduction])
+async def read_farmer_milk_production(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.MilkProduction)
+        .join(models.Animal, models.MilkProduction.animal_id == models.Animal.animal_id)
+        .where(models.Animal.farmer_id == farmer_id)
+    )
+    return result.scalars().all()
+
+@router.get("/weight/farmer/{farmer_id}", response_model=List[schemas.WeightRecord])
+async def read_farmer_weight_records(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.WeightRecord)
+        .join(models.Animal, models.WeightRecord.animal_id == models.Animal.animal_id)
+        .where(models.Animal.farmer_id == farmer_id)
+    )
+    return result.scalars().all()
+
+@router.get("/breeding/farmer/{farmer_id}", response_model=List[schemas.BreedingRecord])
+async def read_farmer_breeding_records(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.BreedingRecord)
+        .join(models.Animal, models.BreedingRecord.female_id == models.Animal.animal_id)
+        .where(models.Animal.farmer_id == farmer_id)
+    )
+    return result.scalars().all()
 @router.put("/breeding/{breeding_id}", response_model=schemas.BreedingRecord)
 async def update_breeding_record(breeding_id: int, record: schemas.BreedingRecordUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.BreedingRecord).where(models.BreedingRecord.breeding_id == breeding_id))

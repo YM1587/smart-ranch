@@ -24,3 +24,12 @@ async def create_health_record(record: schemas.HealthRecordCreate, db: AsyncSess
 async def read_health_records(animal_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.HealthRecord).where(models.HealthRecord.animal_id == animal_id))
     return result.scalars().all()
+
+@router.get("/farmer/{farmer_id}", response_model=List[schemas.HealthRecord])
+async def read_farmer_health_records(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.HealthRecord)
+        .join(models.Animal, models.HealthRecord.animal_id == models.Animal.animal_id)
+        .where(models.Animal.farmer_id == farmer_id)
+    )
+    return result.scalars().all()

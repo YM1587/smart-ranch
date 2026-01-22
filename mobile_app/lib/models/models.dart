@@ -275,3 +275,125 @@ class BreedingRecord {
     };
   }
 }
+
+class LaborActivity {
+  final int id;
+  final int farmerId;
+  final String activityType;
+  final String? description;
+  final double hoursSpent;
+  final double laborCost;
+  final String date;
+  final int? relatedAnimalId;
+  final int? relatedPenId;
+
+  LaborActivity({
+    required this.id,
+    required this.farmerId,
+    required this.activityType,
+    this.description,
+    required this.hoursSpent,
+    required this.laborCost,
+    required this.date,
+    this.relatedAnimalId,
+    this.relatedPenId,
+  });
+
+  factory LaborActivity.fromJson(Map<String, dynamic> json) {
+    return LaborActivity(
+      id: int.tryParse(json['activity_id'].toString()) ?? 0,
+      farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
+      activityType: json['activity_type'],
+      description: json['description'],
+      hoursSpent: double.tryParse(json['hours_spent'].toString()) ?? 0.0,
+      laborCost: double.tryParse(json['labor_cost'].toString()) ?? 0.0,
+      date: json['date'],
+      relatedAnimalId: json['related_animal_id'] != null ? int.tryParse(json['related_animal_id'].toString()) : null,
+      relatedPenId: json['related_pen_id'] != null ? int.tryParse(json['related_pen_id'].toString()) : null,
+    );
+  }
+}
+
+class MilkProduction {
+  final int id;
+  final int animalId;
+  final String date;
+  final double? morningYield;
+  final double? eveningYield;
+  final double totalYield;
+
+  MilkProduction({
+    required this.id,
+    required this.animalId,
+    required this.date,
+    this.morningYield,
+    this.eveningYield,
+    required this.totalYield,
+  });
+
+  factory MilkProduction.fromJson(Map<String, dynamic> json) {
+    return MilkProduction(
+      id: int.tryParse(json['production_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
+      date: json['date'],
+      morningYield: json['morning_yield'] != null ? double.tryParse(json['morning_yield'].toString()) : null,
+      eveningYield: json['evening_yield'] != null ? double.tryParse(json['evening_yield'].toString()) : null,
+      totalYield: double.tryParse(json['total_yield'].toString()) ?? 0.0,
+    );
+  }
+}
+
+class WeightRecord {
+  final int id;
+  final int animalId;
+  final String date;
+  final double weightKg;
+  final int? bodyConditionScore;
+
+  WeightRecord({
+    required this.id,
+    required this.animalId,
+    required this.date,
+    required this.weightKg,
+    this.bodyConditionScore,
+  });
+
+  factory WeightRecord.fromJson(Map<String, dynamic> json) {
+    return WeightRecord(
+      id: int.tryParse(json['weight_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
+      date: json['date'],
+      weightKg: double.tryParse(json['weight_kg'].toString()) ?? 0.0,
+      bodyConditionScore: json['body_condition_score'] != null ? int.tryParse(json['body_condition_score'].toString()) : null,
+    );
+  }
+}
+
+class IndividualFeedLog {
+  final int id;
+  final int animalId;
+  final String feedType;
+  final double quantityKg;
+  final double cost;
+  final String date;
+
+  IndividualFeedLog({
+    required this.id,
+    required this.animalId,
+    required this.feedType,
+    required this.quantityKg,
+    required this.cost,
+    required this.date,
+  });
+
+  factory IndividualFeedLog.fromJson(Map<String, dynamic> json) {
+    return IndividualFeedLog(
+      id: int.tryParse(json['individual_feed_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
+      feedType: json['feed_type'],
+      quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
+      cost: double.tryParse(json['total_cost'].toString()) ?? 0.0,
+      date: json['date'],
+    );
+  }
+}

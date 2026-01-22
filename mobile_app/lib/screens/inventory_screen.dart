@@ -4,6 +4,7 @@ import '../models/models.dart';
 import 'animal_health_screen.dart';
 import 'breeding_history_screen.dart';
 import 'forms/animal_form.dart';
+import 'operations_dashboard_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -131,12 +132,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.medical_services, color: Colors.red),
+            icon: const Icon(Icons.analytics, color: Colors.deepPurple),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AnimalHealthScreen(animal: animal),
+                  builder: (context) => const OperationsDashboardScreen(),
                 ),
               );
             },
@@ -160,7 +161,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AnimalHealthScreen(animal: animal),
+            builder: (context) => const OperationsDashboardScreen(),
           ),
         );
       },
