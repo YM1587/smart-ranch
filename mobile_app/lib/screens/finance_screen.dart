@@ -1,7 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../services/api_service.dart';
+import '../models/models.dart';
+import 'forms/financial_transaction_form.dart';
 
-enum TimeRange { today, week, month, year, all }
+enum TimeRange { today, week, month, year, custom, all }
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -15,6 +19,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   List<FinancialTransaction> _filteredTransactions = [];
   bool _isLoading = true;
   TimeRange _selectedRange = TimeRange.month;
+  DateTimeRange? _customRange;
 
   @override
   void initState() {
@@ -53,6 +58,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
             return tDate.year == now.year && tDate.month == now.month;
           case TimeRange.year:
             return tDate.year == now.year;
+          case TimeRange.custom:
+            if (_customRange == null) return true;
+            return tDate.isAfter(_customRange!.start.subtract(const Duration(seconds: 1))) &&
+                   tDate.isBefore(_customRange!.end.add(const Duration(days: 1)));
           case TimeRange.all:
             return true;
         }
@@ -107,6 +116,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     _buildRangeSelector(),
                     _buildSummaryGrid(totalIncome, totalExpense, netProfit, profitMargin),
                     _buildInsights(totalIncome, totalExpense, netProfit),
+                    _buildTrendChart(),
+                    if (totalIncome > 0) _buildChartSection('INCOME BREAKDOWN', 'Income', Colors.green),
+                    if (totalExpense > 0) _buildChartSection('EXPENSE BREAKDOWN', 'Expense', Colors.red),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       child: Text('Recent Transactions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -116,6 +128,123 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildChartSection(String title, String type, Color color) {
+    // Aggregate by category
+    Map<String, double> categories = {};
+    final filtered = _filteredTransactions.where((t) => t.type == type).toList();
+    for (var t in filtered) {
+      categories[t.category] = (categories[t.category] ?? 0) + t.amount;
+    }
+
+    final total = filtered.fold(0.0, (sum, t) => sum + t.amount);
+
+    return Container(
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blueGrey)),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 150,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: categories.entries.map((e) {
+                  final percentage = (e.value / total) * 100;
+                  return PieChartSectionData(
+                    color: _getCategoryColor(e.key, color),
+                    value: e.value,
+                    title: '${percentage.toStringAsFixed(0)}%',
+                    radius: 40,
+                    titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: categories.keys.map((cat) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 8, height: 8, color: _getCategoryColor(cat, color)),
+                  const SizedBox(width: 4),
+                  Text(cat, style: const TextStyle(fontSize: 10)),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getCategoryColor(String category, Color baseColor) {
+    // Deterministic colors based on category name
+    final hash = category.hashCode;
+    return baseColor.withOpacity(0.5 + (hash % 50) / 100);
+  }
+
+  Widget _buildTrendChart() {
+    if (_filteredTransactions.isEmpty) return const SizedBox.shrink();
+
+    // Aggregate by date
+    Map<String, double> dailyProfit = {};
+    for (var t in _filteredTransactions) {
+      final amount = t.type == 'Income' ? t.amount : -t.amount;
+      dailyProfit[t.date] = (dailyProfit[t.date] ?? 0) + amount;
+    }
+
+    final sortedDates = dailyProfit.keys.toList()..sort();
+    if (sortedDates.isEmpty) return const SizedBox.shrink();
+
+    List<FlSpot> spots = [];
+    for (int i = 0; i < sortedDates.length; i++) {
+      spots.add(FlSpot(i.toDouble(), dailyProfit[sortedDates[i]]!));
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      height: 200,
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('DAILY PERFORMANCE TREND', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.blueGrey)),
+          const SizedBox(height: 20),
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: Colors.blue,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.1)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -133,10 +262,26 @@ class _FinanceScreenState extends State<FinanceScreen> {
               child: ChoiceChip(
                 label: Text(range.name.toUpperCase()),
                 selected: isSelected,
-                onSelected: (val) {
+                onSelected: (val) async {
                   if (val) {
-                    setState(() => _selectedRange = range);
-                    _filterTransactions();
+                    if (range == TimeRange.custom) {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                        initialDateRange: _customRange,
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _selectedRange = range;
+                          _customRange = picked;
+                        });
+                        _filterTransactions();
+                      }
+                    } else {
+                      setState(() => _selectedRange = range);
+                      _filterTransactions();
+                    }
                   }
                 },
               ),
