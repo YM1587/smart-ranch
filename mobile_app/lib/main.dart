@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/inventory_screen.dart';
-import 'screens/health_screen.dart';
+import 'screens/operations_dashboard_screen.dart';
 import 'screens/finance_screen.dart';
 
 void main() {
@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const InventoryScreen(),
-    const HealthScreen(),
+    const OperationsDashboardScreen(),
     const FinanceScreen(),
   ];
 
@@ -56,7 +56,7 @@ class _MainScreenState extends State<MainScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.pets), label: 'Inventory'),
-          BottomNavigationBarItem(icon: Icon(Icons.medical_services), label: 'Health'),
+          BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Operations'),
           BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Finance'),
         ],
         currentIndex: _selectedIndex,

@@ -70,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildActionTile(context, 'Weight Record', Icons.monitor_weight, () => WeightRecordForm(farmerId: farmerId)),
               _buildActionTile(context, 'Breeding', Icons.favorite, () => BreedingRecordForm(farmerId: farmerId)),
               _buildActionTile(context, 'Feed Log', Icons.grass, () => FeedLogForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Operations', Icons.analytics, () => const OperationsDashboardScreen()),
+              _buildActionTile(context, 'Health', Icons.medical_services, () => HealthRecordForm(farmerId: farmerId)),
               _buildActionTile(context, 'Labor', Icons.work, () => LaborActivityForm(farmerId: farmerId)),
               _buildActionTile(context, 'Finance', Icons.monetization_on, () => const FinanceScreen()),
               _buildActionTile(context, 'Settings', Icons.settings, () => const FarmerForm()),

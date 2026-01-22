@@ -132,12 +132,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.analytics, color: Colors.deepPurple),
+            icon: const Icon(Icons.medical_services, color: Colors.red),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const OperationsDashboardScreen(),
+                  builder: (context) => AnimalHealthScreen(animal: animal),
                 ),
               );
             },
@@ -161,7 +161,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const OperationsDashboardScreen(),
+            builder: (context) => AnimalHealthScreen(animal: animal),
           ),
         );
       },
