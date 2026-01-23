@@ -244,14 +244,21 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
 
   // --- 1. FEED SECTION ---
   Widget _buildFeedSection() {
+    final totalFeedCost = _penFeedLogs.fold(0.0, (sum, item) => sum + item.cost) +
+        _indFeedLogs.fold(0.0, (sum, item) => sum + item.cost);
+    final totalFeedQty = _penFeedLogs.fold(0.0, (sum, item) => sum + item.quantityKg) +
+        _indFeedLogs.fold(0.0, (sum, item) => sum + item.quantityKg);
+    
+    final efficiency = totalFeedQty > 0 ? (totalFeedCost / totalFeedQty) : 0.0;
+    
     return _buildSectionCard(
       'Feed & Nutrition',
       [
         _buildTrendGraph('Feed Cost vs Quantity', Colors.green),
         const SizedBox(height: 16),
         _buildMetricRow([
-          _buildDetailMetric('Efficiency', '1.2kg/K', 'Conversion'),
-          _buildDetailMetric('Monthly Feed', NumberFormat.compact().format(54000), 'Total KES'),
+          _buildDetailMetric('Cost/kg', 'KES ${efficiency.toStringAsFixed(1)}', 'Avg Rate'),
+          _buildDetailMetric('Total Feed', NumberFormat.compact().format(totalFeedCost), 'Total KES'),
         ]),
       ],
       Icons.grass,
@@ -260,14 +267,23 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
 
   // --- 2. HEALTH SECTION ---
   Widget _buildHealthSection() {
+    final now = DateTime.now();
+    final thisMonth = _healthEvents.where((e) {
+      final date = DateTime.tryParse(e.eventDate);
+      return date != null && date.year == now.year && date.month == now.month;
+    }).toList();
+    
+    final totalHealthCost = thisMonth.fold(0.0, (sum, item) => sum + (item.cost ?? 0));
+    final activeCases = thisMonth.length;
+    
     return _buildSectionCard(
       'Health & Veterinary',
       [
         _buildTreatmentDistChart(),
         const SizedBox(height: 16),
         _buildMetricRow([
-          _buildDetailMetric('Active Cases', '4', 'Animals'),
-          _buildDetailMetric('Vet Expenditure', 'KES 12k', 'This Month'),
+          _buildDetailMetric('Active Cases', '$activeCases', 'This Month'),
+          _buildDetailMetric('Vet Expenditure', NumberFormat.compactCurrency(symbol: 'KES ').format(totalHealthCost), 'This Month'),
         ]),
       ],
       Icons.medical_services,
@@ -276,14 +292,18 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
 
   // --- 3. LABOR SECTION ---
   Widget _buildLaborSection() {
+    final totalHours = _laborActivities.fold(0.0, (sum, item) => sum + item.hoursSpent);
+    final totalCost = _laborActivities.fold(0.0, (sum, item) => sum + item.laborCost);
+    final avgRate = totalHours > 0 ? (totalCost / totalHours) : 0.0;
+    
     return _buildSectionCard(
       'Labor & Operations',
       [
         _buildLaborPie(),
         const SizedBox(height: 16),
         _buildMetricRow([
-          _buildDetailMetric('Man Hours', '142h', 'Total Month'),
-          _buildDetailMetric('Cost/H', 'KES 450', 'Avg Rate'),
+          _buildDetailMetric('Man Hours', '${totalHours.toStringAsFixed(1)}h', 'Total'),
+          _buildDetailMetric('Cost/H', 'KES ${avgRate.toStringAsFixed(0)}', 'Avg Rate'),
         ]),
       ],
       Icons.work,
@@ -292,14 +312,18 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
 
   // --- 4. BREEDING SECTION ---
   Widget _buildBreedingSection() {
+    final totalBreedings = _breedingRecords.length;
+    final pregnant = _breedingRecords.where((r) => r.pregnancyStatus == 'Pregnant').length;
+    final successRate = totalBreedings > 0 ? ((pregnant / totalBreedings) * 100) : 0.0;
+    
     return _buildSectionCard(
       'Breeding & Reproduction',
       [
         _buildBreedingFunnel(),
         const SizedBox(height: 16),
         _buildMetricRow([
-          _buildDetailMetric('Success Rate', '68%', 'Pregnancy'),
-          _buildDetailMetric('Calving Int.', '380d', 'Avg Days'),
+          _buildDetailMetric('Success Rate', '${successRate.toStringAsFixed(0)}%', 'Pregnancy'),
+          _buildDetailMetric('Total Records', '$totalBreedings', 'All Time'),
         ]),
       ],
       Icons.favorite,
@@ -308,14 +332,18 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
 
   // --- 5. PRODUCTION SECTION ---
   Widget _buildProductionSection() {
+    final totalMilk = _milkRecords.fold(0.0, (sum, item) => sum + item.totalYield);
+    final milkingCows = _animals.where((a) => a.sex == 'Female' && a.status == 'Active').length;
+    final avgPerCow = milkingCows > 0 ? (totalMilk / milkingCows) : 0.0;
+    
     return _buildSectionCard(
       'Production Analytics',
       [
         _buildProductionChart(),
         const SizedBox(height: 16),
         _buildMetricRow([
-          _buildDetailMetric('Daily Avg', '18.4L', 'Per Cow'),
-          _buildDetailMetric('Top Pen', 'Pen B', 'Yield Leader'),
+          _buildDetailMetric('Avg Yield', '${avgPerCow.toStringAsFixed(1)}L', 'Per Cow'),
+          _buildDetailMetric('Total Milk', '${totalMilk.toStringAsFixed(0)}L', 'All Records'),
         ]),
       ],
       Icons.insights,
@@ -445,12 +473,17 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
   }
 
   Widget _buildBreedingFunnel() {
+    final totalCycles = _breedingRecords.length;
+    final pregnant = _breedingRecords.where((r) => r.pregnancyStatus == 'Pregnant').length;
+    final births = _breedingRecords.where((r) => r.outcome == 'Live Calf').length;
+    final notPregnant = _breedingRecords.where((r) => r.pregnancyStatus == 'Not Pregnant').length;
+    
     return Column(
       children: [
-        _buildFunnelStep('Cycles', '24', 1.0, Colors.pink[100]!),
-        _buildFunnelStep('Inseminated', '18', 0.8, Colors.pink[200]!),
-        _buildFunnelStep('Confirmed', '12', 0.6, Colors.pink[300]!),
-        _buildFunnelStep('Births', '9', 0.4, Colors.pink[400]!),
+        _buildFunnelStep('Total Cycles', '$totalCycles', 1.0, Colors.pink[100]!),
+        _buildFunnelStep('Pregnant', '$pregnant', totalCycles > 0 ? pregnant / totalCycles : 0.0, Colors.pink[200]!),
+        _buildFunnelStep('Births', '$births', totalCycles > 0 ? births / totalCycles : 0.0, Colors.pink[300]!),
+        _buildFunnelStep('Not Pregnant', '$notPregnant', totalCycles > 0 ? notPregnant / totalCycles : 0.0, Colors.pink[400]!),
       ],
     );
   }
