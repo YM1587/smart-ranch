@@ -36,6 +36,7 @@ class Animal {
   final String? birthDate;
   final String? acquisitionType;
   final double? acquisitionCost;
+  final String? disposalReason;
 
   Animal({
     required this.id,
@@ -49,6 +50,7 @@ class Animal {
     this.birthDate,
     this.acquisitionType,
     this.acquisitionCost,
+    this.disposalReason,
   });
 
   factory Animal.fromJson(Map<String, dynamic> json) {
@@ -66,6 +68,7 @@ class Animal {
       acquisitionCost: json['acquisition_cost'] != null 
           ? double.tryParse(json['acquisition_cost'].toString()) 
           : null,
+      disposalReason: json['disposal_reason'],
     );
   }
 
@@ -81,6 +84,7 @@ class Animal {
       'birth_date': birthDate,
       'acquisition_type': acquisitionType,
       'acquisition_cost': acquisitionCost,
+      'disposal_reason': disposalReason,
     };
   }
 }
@@ -93,6 +97,7 @@ class HealthEvent {
   final String? diagnosis;
   final String? treatment;
   final double? cost;
+  final String? nextCheckupDate;
 
   HealthEvent({
     required this.id,
@@ -102,6 +107,7 @@ class HealthEvent {
     this.diagnosis,
     this.treatment,
     this.cost,
+    this.nextCheckupDate,
   });
 
   factory HealthEvent.fromJson(Map<String, dynamic> json) {
@@ -113,6 +119,7 @@ class HealthEvent {
       diagnosis: json['symptoms'],
       treatment: json['treatment'],
       cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) ?? 0.0 : 0.0,
+      nextCheckupDate: json['next_checkup_date'],
     );
   }
 
@@ -124,6 +131,7 @@ class HealthEvent {
       'diagnosis': diagnosis,
       'treatment': treatment,
       'cost': cost,
+      'next_checkup_date': nextCheckupDate,
     };
   }
 }
