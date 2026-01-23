@@ -5,15 +5,6 @@ import '../services/api_service.dart';
 import '../models/models.dart';
 import 'finance_screen.dart';
 import 'operations_dashboard_screen.dart';
-import 'forms/animal_form.dart';
-import 'forms/milk_production_form.dart';
-import 'forms/weight_record_form.dart';
-import 'forms/breeding_record_form.dart';
-import 'forms/feed_log_form.dart';
-import 'forms/health_record_form.dart';
-import 'forms/labor_activity_form.dart';
-import 'forms/financial_transaction_form.dart';
-import 'forms/farmer_form.dart';
 
 // Alert Model
 class DashboardAlert {
@@ -299,10 +290,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showActionSheet(context),
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -751,55 +738,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showActionSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            alignment: WrapAlignment.center,
-            children: [
-              _buildActionTile(context, 'Add Animal', Icons.pets, () => AnimalForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Milk Record', Icons.water_drop, () => MilkProductionForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Weight Record', Icons.monitor_weight, () => WeightRecordForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Breeding', Icons.favorite, () => BreedingRecordForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Feed Log', Icons.grass, () => FeedLogForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Health', Icons.medical_services, () => HealthRecordForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Labor', Icons.work, () => LaborActivityForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Finance', Icons.monetization_on, () => const FinanceScreen()),
-              _buildActionTile(context, 'Settings', Icons.settings, () => const FarmerForm()),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionTile(BuildContext context, String label, IconData icon, Widget Function() pageBuilder) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => pageBuilder()));
-      },
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 32, color: Colors.blue),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-          ],
-        ),
-      ),
-    );
-  }
 }

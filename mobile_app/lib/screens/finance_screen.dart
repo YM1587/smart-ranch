@@ -93,6 +93,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _loadTransactions();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.add_chart), 
             onPressed: () async {
               await Navigator.push(
