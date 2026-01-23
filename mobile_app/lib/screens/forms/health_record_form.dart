@@ -109,7 +109,7 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
                 items: _pens.map<DropdownMenuItem<int>>((pen) {
                   return DropdownMenuItem<int>(
                     value: pen.id,
-                    child: Text(pen.name),
+                    child: Text("${pen.name} (${pen.livestockType})"),
                   );
                 }).toList(),
                 onChanged: (value) {

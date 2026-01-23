@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/models.dart';
 
 class FeedLogForm extends StatefulWidget {
   final int farmerId;
@@ -15,7 +16,7 @@ class _FeedLogFormState extends State<FeedLogForm> {
   final _costController = TextEditingController();
   int? _selectedPenId;
   String _feedType = 'Napier Grass';
-  List<dynamic> _pens = [];
+  List<Pen> _pens = [];
   bool _isLoading = false;
 
   final List<String> _feedTypes = [
@@ -35,7 +36,7 @@ class _FeedLogFormState extends State<FeedLogForm> {
       setState(() {
         _pens = pens;
         if (_pens.isNotEmpty) {
-          _selectedPenId = _pens[0]['pen_id'];
+          _selectedPenId = _pens[0].id;
         }
       });
     } catch (e) {
@@ -90,8 +91,8 @@ class _FeedLogFormState extends State<FeedLogForm> {
                 decoration: const InputDecoration(labelText: 'Pen'),
                 items: _pens.map<DropdownMenuItem<int>>((pen) {
                   return DropdownMenuItem<int>(
-                    value: pen['pen_id'],
-                    child: Text(pen['pen_name']),
+                    value: pen.id,
+                    child: Text("${pen.name} (${pen.livestockType})"),
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedPenId = value),

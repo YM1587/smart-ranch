@@ -27,7 +27,7 @@ class _AnimalFormState extends State<AnimalForm> {
     'Other'
   ];
   int? _selectedPenId;
-  List<dynamic> _pens = [];
+  List<Pen> _pens = [];
 
   bool _isLoading = false;
 
@@ -53,11 +53,11 @@ class _AnimalFormState extends State<AnimalForm> {
       setState(() {
         _pens = pens;
         // If we are in edit mode, ensure the existing pen is in the list
-        bool exists = _pens.any((p) => p['pen_id'] == _selectedPenId);
+        bool exists = _pens.any((p) => p.id == _selectedPenId);
         if (!exists && _pens.isNotEmpty) {
            // If the animal's pen isn't in the list (rare), default to first available
            if (_selectedPenId == null) {
-             _selectedPenId = _pens[0]['pen_id'];
+             _selectedPenId = _pens[0].id;
            }
         }
       });
@@ -75,12 +75,12 @@ class _AnimalFormState extends State<AnimalForm> {
       // Find selected pen safely
       dynamic selectedPen;
       try {
-        selectedPen = _pens.firstWhere((p) => p['pen_id'] == _selectedPenId);
+        selectedPen = _pens.firstWhere((p) => p.id == _selectedPenId);
       } catch (e) {
         selectedPen = null;
       }
 
-      if (selectedPen != null && selectedPen['pen_name'].toString().toLowerCase() == 'milking parlor' && _gender == 'Male') {
+      if (selectedPen != null && selectedPen.name.toLowerCase() == 'milking parlor' && _gender == 'Male') {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Only female animals can be assigned to the Milking Parlor!')),
@@ -211,8 +211,8 @@ class _AnimalFormState extends State<AnimalForm> {
                         decoration: const InputDecoration(labelText: 'Pen'),
                         items: _pens.map<DropdownMenuItem<int>>((pen) {
                           return DropdownMenuItem<int>(
-                            value: pen['pen_id'],
-                            child: Text(pen['pen_name']),
+                            value: pen.id,
+                            child: Text("${pen.name} (${pen.livestockType})"),
                           );
                         }).toList(),
                         onChanged: (value) => setState(() => _selectedPenId = value),

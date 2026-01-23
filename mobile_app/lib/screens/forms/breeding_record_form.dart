@@ -59,8 +59,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
       ]);
       
       final animals = results[0] as List<Animal>;
-      final pensJson = results[1] as List<dynamic>;
-      final pens = pensJson.map((j) => Pen.fromJson(j)).toList();
+      final pens = results[1] as List<Pen>;
 
       setState(() {
         _allAnimals = animals;
