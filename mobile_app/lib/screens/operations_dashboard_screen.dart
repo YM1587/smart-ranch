@@ -406,70 +406,322 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
     );
   }
 
-  // --- CHART PLACEHOLDERS (To be populated with real data logic) ---
+  // --- CHART VISUALIZATIONS ---
 
   Widget _buildTrendGraph(String title, Color color) {
+    // Group feed by type and calculate totals
+    Map<String, double> feedTypeCosts = {};
+    for (var log in _penFeedLogs) {
+      feedTypeCosts[log.feedType] = (feedTypeCosts[log.feedType] ?? 0) + log.cost;
+    }
+    for (var log in _indFeedLogs) {
+      feedTypeCosts[log.feedType] = (feedTypeCosts[log.feedType] ?? 0) + log.cost;
+    }
+    
+    // Get top 5 feed types
+    final sortedFeed = feedTypeCosts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topFeed = sortedFeed.take(5).toList();
+    
+    if (topFeed.isEmpty) {
+      return const SizedBox(
+        height: 120,
+        child: Center(child: Text('No feed data available', style: TextStyle(color: Colors.grey))),
+      );
+    }
+    
     return SizedBox(
-      height: 100,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: [const FlSpot(0, 3), const FlSpot(1, 1), const FlSpot(2, 4), const FlSpot(3, 2), const FlSpot(4, 5)],
-              isCurved: true,
-              color: color,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: FlDotData(show: false),
-              belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
+      height: 150,
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: (topFeed.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2),
+          minY: 0, // Zero baseline
+          barTouchData: BarTouchData(enabled: true),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  if (value.toInt() >= 0 && value.toInt() < topFeed.length) {
+                    final feedType = topFeed[value.toInt()].key;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        feedType.length > 10 ? '${feedType.substring(0, 10)}...' : feedType,
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                      ),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
             ),
-          ],
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    NumberFormat.compact().format(value),
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          borderData: FlBorderData(show: false),
+          gridData: FlGridData(show: true, drawVerticalLine: false),
+          barGroups: topFeed.asMap().entries.map((entry) {
+            return BarChartGroupData(
+              x: entry.key,
+              barRods: [
+                BarChartRodData(
+                  toY: entry.value.value,
+                  color: color,
+                  width: 20,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                ),
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
   Widget _buildLaborPie() {
+    // Calculate labor distribution by activity type
+    Map<String, double> activityCosts = {};
+    for (var activity in _laborActivities) {
+      activityCosts[activity.activityType] = 
+          (activityCosts[activity.activityType] ?? 0) + activity.laborCost;
+    }
+    
+    // Limit to top 5 categories, group rest as "Other"
+    final sortedEntries = activityCosts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    final colors = [Colors.blue, Colors.orange, Colors.green, Colors.purple, Colors.red, Colors.grey];
+    List<PieChartSectionData> sections = [];
+    
+    if (sortedEntries.isEmpty) {
+      sections.add(PieChartSectionData(
+        color: Colors.grey[300]!,
+        value: 1,
+        title: 'No Data',
+        radius: 50,
+        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
+      ));
+    } else {
+      for (int i = 0; i < sortedEntries.length && i < 5; i++) {
+        sections.add(PieChartSectionData(
+          color: colors[i],
+          value: sortedEntries[i].value,
+          title: sortedEntries[i].key,
+          radius: 50,
+          titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+        ));
+      }
+      
+      // Group remaining as "Other" if more than 5 categories
+      if (sortedEntries.length > 5) {
+        final otherValue = sortedEntries.skip(5).fold(0.0, (sum, e) => sum + e.value);
+        sections.add(PieChartSectionData(
+          color: colors[5],
+          value: otherValue,
+          title: 'Other',
+          radius: 50,
+          titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+        ));
+      }
+    }
+    
     return SizedBox(
-      height: 100,
+      height: 150,
       child: PieChart(
         PieChartData(
-          sectionsSpace: 4,
-          centerSpaceRadius: 20,
-          sections: [
-            PieChartSectionData(color: Colors.blue, value: 40, title: 'Milk', radius: 40, showTitle: false),
-            PieChartSectionData(color: Colors.orange, value: 30, title: 'Feed', radius: 40, showTitle: false),
-            PieChartSectionData(color: Colors.red, value: 20, title: 'Health', radius: 40, showTitle: false),
-            PieChartSectionData(color: Colors.grey, value: 10, title: 'Other', radius: 40, showTitle: false),
-          ],
+          sectionsSpace: 2,
+          centerSpaceRadius: 0, // No donut hole - proper pie chart
+          sections: sections,
         ),
       ),
     );
   }
 
   Widget _buildTreatmentDistChart() {
+    // Group health events by condition type
+    Map<String, int> conditionCounts = {};
+    for (var event in _healthEvents) {
+      conditionCounts[event.eventType] = (conditionCounts[event.eventType] ?? 0) + 1;
+    }
+    
+    // Get top 5 conditions
+    final sortedConditions = conditionCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topConditions = sortedConditions.take(5).toList();
+    
+    if (topConditions.isEmpty) {
+      return const SizedBox(
+        height: 100,
+        child: Center(child: Text('No health data available', style: TextStyle(color: Colors.grey))),
+      );
+    }
+    
     return SizedBox(
-      height: 100,
+      height: 150,
       child: BarChart(
         BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: (topConditions.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2).toDouble(),
+          minY: 0, // Zero baseline
+          barTouchData: BarTouchData(enabled: true),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  if (value.toInt() >= 0 && value.toInt() < topConditions.length) {
+                    final condition = topConditions[value.toInt()].key;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        condition.length > 8 ? '${condition.substring(0, 8)}...' : condition,
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                      ),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) {
+                  return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10, color: Colors.grey));
+                },
+              ),
+            ),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
           borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(show: false),
-          barGroups: [
-            BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 8, color: Colors.red, width: 12, borderRadius: BorderRadius.circular(4))]),
-            BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 10, color: Colors.red, width: 12, borderRadius: BorderRadius.circular(4))]),
-            BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 5, color: Colors.red, width: 12, borderRadius: BorderRadius.circular(4))]),
-            BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 12, color: Colors.red, width: 12, borderRadius: BorderRadius.circular(4))]),
-          ],
+          gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 2),
+          barGroups: topConditions.asMap().entries.map((entry) {
+            return BarChartGroupData(
+              x: entry.key,
+              barRods: [
+                BarChartRodData(
+                  toY: entry.value.value.toDouble(),
+                  color: Colors.red,
+                  width: 20,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                ),
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
   Widget _buildProductionChart() {
-    return _buildTrendGraph('Volume (L)', Colors.blue);
+    // Group milk production by date
+    Map<String, double> dailyMilk = {};
+    for (var record in _milkRecords) {
+      dailyMilk[record.date] = (dailyMilk[record.date] ?? 0) + record.totalYield;
+    }
+    
+    // Sort dates and create spots
+    final sortedDates = dailyMilk.keys.toList()..sort();
+    
+    if (sortedDates.isEmpty) {
+      return const SizedBox(
+        height: 120,
+        child: Center(child: Text('No production data available', style: TextStyle(color: Colors.grey))),
+      );
+    }
+    
+    // Take last 30 days or all if less
+    final recentDates = sortedDates.length > 30 ? sortedDates.sublist(sortedDates.length - 30) : sortedDates;
+    
+    List<FlSpot> spots = [];
+    for (int i = 0; i < recentDates.length; i++) {
+      spots.add(FlSpot(i.toDouble(), dailyMilk[recentDates[i]]!));
+    }
+    
+    return SizedBox(
+      height: 150,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) / 5,
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) {
+                  if (value.toInt() >= 0 && value.toInt() < recentDates.length) {
+                    // Show every 5th date
+                    if (value.toInt() % 5 == 0) {
+                      final date = DateTime.tryParse(recentDates[value.toInt()]);
+                      if (date != null) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            '${date.month}/${date.day}',
+                            style: const TextStyle(fontSize: 9, color: Colors.grey),
+                          ),
+                        );
+                      }
+                    }
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 35,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    value.toInt().toString(),
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          borderData: FlBorderData(show: false),
+          minY: 0, // Zero baseline
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              color: Colors.blue,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(show: spots.length < 15), // Show dots only if few data points
+              belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.1)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildBreedingFunnel() {

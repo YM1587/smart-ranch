@@ -155,14 +155,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
             child: PieChart(
               PieChartData(
                 sectionsSpace: 2,
-                centerSpaceRadius: 40,
+                centerSpaceRadius: 0, // Proper pie chart, not donut
                 sections: categories.entries.map((e) {
                   final percentage = (e.value / total) * 100;
                   return PieChartSectionData(
                     color: _getCategoryColor(e.key, color),
                     value: e.value,
                     title: '${percentage.toStringAsFixed(0)}%',
-                    radius: 40,
+                    radius: 50,
                     titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
                   );
                 }).toList(),
