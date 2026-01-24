@@ -41,13 +41,11 @@ async def read_weight_records_by_animal(animal_id: int, db: AsyncSession = Depen
     result = await db.execute(select(models.WeightRecord).where(models.WeightRecord.animal_id == animal_id))
     return result.scalars().all()
 
-# --- BREEDING RECORDS ---
 @router.post("/breeding", response_model=schemas.BreedingRecord, status_code=status.HTTP_201_CREATED)
 async def create_breeding_record(record: schemas.BreedingRecordCreate, db: AsyncSession = Depends(get_db)):
     new_record = models.BreedingRecord(**record.dict())
     db.add(new_record)
-    await db.commit()
-    await db.refresh(new_record)
+    await db.flush()
     
     # Fetch farmer_id from female animal
     result = await db.execute(select(models.Animal).where(models.Animal.animal_id == new_record.female_id))
@@ -58,15 +56,16 @@ async def create_breeding_record(record: schemas.BreedingRecordCreate, db: Async
             db=db,
             farmer_id=animal.farmer_id,
             amount=new_record.cost,
-            category="Breeding",
+            category="Breeding Costs",
             description=f"Breeding event for {animal.name or animal.tag_number}",
             source_table="breeding_record",
             source_id=new_record.breeding_id,
             transaction_date=new_record.breeding_date,
             related_animal_id=new_record.female_id
         )
-        await db.commit()
 
+    await db.commit()
+    await db.refresh(new_record)
     return new_record
 
 @router.get("/breeding/animal/{animal_id}", response_model=List[schemas.BreedingRecord])
@@ -118,25 +117,24 @@ async def update_breeding_record(breeding_id: int, record: schemas.BreedingRecor
     for key, value in update_data.items():
         setattr(db_record, key, value)
     
-    await db.commit()
-    await db.refresh(db_record)
+    await db.flush()
     
     # Fetch farmer_id from female animal
     res = await db.execute(select(models.Animal).where(models.Animal.animal_id == db_record.female_id))
     animal = res.scalars().first()
-    
     if animal:
         await sync_operation_to_ledger(
             db=db,
             farmer_id=animal.farmer_id,
             amount=db_record.cost,
-            category="Breeding",
+            category="Breeding Costs",
             description=f"Breeding event update for {animal.name or animal.tag_number}",
             source_table="breeding_record",
             source_id=db_record.breeding_id,
             transaction_date=db_record.breeding_date,
             related_animal_id=db_record.female_id
         )
-        await db.commit()
 
+    await db.commit()
+    await db.refresh(db_record)
     return db_record

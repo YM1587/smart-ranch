@@ -17,8 +17,8 @@ router = APIRouter(
 async def create_health_record(record: schemas.HealthRecordCreate, db: AsyncSession = Depends(get_db)):
     new_record = models.HealthRecord(**record.dict())
     db.add(new_record)
-    await db.commit()
-    await db.refresh(new_record)
+    # Use flush into commit once atomic
+    await db.flush()
     
     # Fetch farmer_id from animal
     result = await db.execute(select(models.Animal).where(models.Animal.animal_id == new_record.animal_id))
@@ -36,8 +36,9 @@ async def create_health_record(record: schemas.HealthRecordCreate, db: AsyncSess
             transaction_date=new_record.date,
             related_animal_id=new_record.animal_id
         )
-        await db.commit()
-
+    
+    await db.commit()
+    await db.refresh(new_record)
     return new_record
 
 @router.get("/animal/{animal_id}", response_model=List[schemas.HealthRecord])

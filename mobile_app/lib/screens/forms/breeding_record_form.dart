@@ -204,12 +204,12 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
               DropdownButtonFormField<String>(
                 value: _pregnancyStatus,
                 decoration: const InputDecoration(labelText: 'Pregnancy Status'),
-                items: ['Unknown', 'Pregnant', 'Not Pregnant']
+                items: ['Unknown', 'Confirmed', 'Failed']
                     .map((status) => DropdownMenuItem(value: status, child: Text(status)))
                     .toList(),
                 onChanged: (value) => setState(() {
                   _pregnancyStatus = value!;
-                  if (_pregnancyStatus == 'Pregnant' && _expectedCalvingDate == null) {
+                  if (_pregnancyStatus == 'Confirmed' && _expectedCalvingDate == null) {
                     // Set default expected date (approx 283 days for cows)
                     _expectedCalvingDate = _breedingDate.add(const Duration(days: 283));
                   }

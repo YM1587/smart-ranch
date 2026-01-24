@@ -18,8 +18,7 @@ router = APIRouter(
 async def create_feed_log(log: schemas.FeedLogCreate, db: AsyncSession = Depends(get_db)):
     new_log = models.FeedLog(**log.dict())
     db.add(new_log)
-    await db.commit()
-    await db.refresh(new_log)
+    await db.flush()
     
     # Fetch farmer_id from pen
     result = await db.execute(select(models.AnimalPen).where(models.AnimalPen.pen_id == new_log.pen_id))
@@ -37,7 +36,9 @@ async def create_feed_log(log: schemas.FeedLogCreate, db: AsyncSession = Depends
             transaction_date=new_log.date,
             related_pen_id=new_log.pen_id
         )
-        await db.commit()
+    
+    await db.commit()
+    await db.refresh(new_log)
 
     return new_log
 
@@ -51,6 +52,25 @@ async def read_feed_logs(pen_id: int, db: AsyncSession = Depends(get_db)):
 async def create_individual_feed_log(log: schemas.IndividualFeedLogCreate, db: AsyncSession = Depends(get_db)):
     new_log = models.IndividualFeedLog(**log.dict())
     db.add(new_log)
+    await db.flush()
+    
+    # Fetch farmer_id from animal
+    result = await db.execute(select(models.Animal).where(models.Animal.animal_id == new_log.animal_id))
+    animal = result.scalars().first()
+    
+    if animal:
+        await sync_operation_to_ledger(
+            db=db,
+            farmer_id=animal.farmer_id,
+            amount=new_log.quantity_kg * new_log.cost_per_kg,
+            category="Feed",
+            description=f"Individual feed ({new_log.feed_type}) for {animal.name or animal.tag_number}",
+            source_table="individual_feed_log",
+            source_id=new_log.individual_feed_id,
+            transaction_date=new_log.date,
+            related_animal_id=new_log.animal_id
+        )
+
     await db.commit()
     await db.refresh(new_log)
     return new_log

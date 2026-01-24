@@ -17,8 +17,7 @@ router = APIRouter(
 async def create_labor_activity(activity: schemas.LaborActivityCreate, db: AsyncSession = Depends(get_db)):
     new_activity = models.LaborActivity(**activity.dict())
     db.add(new_activity)
-    await db.commit()
-    await db.refresh(new_activity)
+    await db.flush()
     
     await sync_operation_to_ledger(
         db=db,
@@ -32,8 +31,9 @@ async def create_labor_activity(activity: schemas.LaborActivityCreate, db: Async
         related_animal_id=new_activity.related_animal_id,
         related_pen_id=new_activity.related_pen_id
     )
+    
     await db.commit()
-
+    await db.refresh(new_activity)
     return new_activity
 
 @router.get("/farmer/{farmer_id}", response_model=List[schemas.LaborActivity])
