@@ -6,6 +6,7 @@ from typing import List
 from database import get_db
 import models
 import schemas
+from ledger_sync import sync_operation_to_ledger
 
 router = APIRouter(
     prefix="/feed",
@@ -19,6 +20,25 @@ async def create_feed_log(log: schemas.FeedLogCreate, db: AsyncSession = Depends
     db.add(new_log)
     await db.commit()
     await db.refresh(new_log)
+    
+    # Fetch farmer_id from pen
+    result = await db.execute(select(models.AnimalPen).where(models.AnimalPen.pen_id == new_log.pen_id))
+    pen = result.scalars().first()
+    
+    if pen:
+        await sync_operation_to_ledger(
+            db=db,
+            farmer_id=pen.farmer_id,
+            amount=new_log.quantity_kg * new_log.cost_per_kg,
+            category="Feed",
+            description=f"Feed ({new_log.feed_type}) for Pen {pen.pen_name}",
+            source_table="feed_log",
+            source_id=new_log.log_id,
+            transaction_date=new_log.date,
+            related_pen_id=new_log.pen_id
+        )
+        await db.commit()
+
     return new_log
 
 @router.get("/pen/{pen_id}", response_model=List[schemas.FeedLog])

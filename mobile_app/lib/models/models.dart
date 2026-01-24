@@ -184,6 +184,9 @@ class FinancialTransaction {
   final String? description;
   final int? relatedAnimalId;
   final int? relatedPenId;
+  final String? buyerSupplier;
+  final String? sourceTable;
+  final int? sourceId;
   final String? notes;
 
   FinancialTransaction({
@@ -195,19 +198,25 @@ class FinancialTransaction {
     this.description,
     this.relatedAnimalId,
     this.relatedPenId,
+    this.buyerSupplier,
+    this.sourceTable,
+    this.sourceId,
     this.notes,
   });
 
   factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
     return FinancialTransaction(
       id: int.tryParse(json['transaction_id'].toString()) ?? 0,
-      type: json['type'],
-      category: json['category'],
+      type: json['type'] ?? '',
+      category: json['category'] ?? '',
       amount: double.tryParse(json['amount'].toString()) ?? 0.0,
-      date: json['date'],
+      date: json['date'] ?? '',
       description: json['description'],
       relatedAnimalId: json['related_animal_id'] != null ? int.tryParse(json['related_animal_id'].toString()) : null,
       relatedPenId: json['related_pen_id'] != null ? int.tryParse(json['related_pen_id'].toString()) : null,
+      buyerSupplier: json['buyer_supplier'],
+      sourceTable: json['source_table'],
+      sourceId: json['source_id'] != null ? int.tryParse(json['source_id'].toString()) : null,
       notes: json['notes'],
     );
   }
@@ -221,6 +230,9 @@ class FinancialTransaction {
       'description': description,
       'related_animal_id': relatedAnimalId,
       'related_pen_id': relatedPenId,
+      'buyer_supplier': buyerSupplier,
+      'source_table': sourceTable,
+      'source_id': sourceId,
       'notes': notes,
     };
   }
@@ -236,6 +248,7 @@ class BreedingRecord {
   final String? actualCalvingDate;
   final String? outcome;
   final int? offspringId;
+  final double cost;
   final String? notes;
 
   BreedingRecord({
@@ -249,6 +262,7 @@ class BreedingRecord {
     this.actualCalvingDate,
     this.outcome,
     this.offspringId,
+    this.cost = 0.0,
     this.notes,
   });
 
@@ -257,13 +271,14 @@ class BreedingRecord {
       id: int.tryParse(json['breeding_id'].toString()) ?? 0,
       femaleId: int.tryParse(json['female_id'].toString()) ?? 0,
       maleId: json['male_id'] != null ? int.tryParse(json['male_id'].toString()) : null,
-      breedingDate: json['breeding_date'],
+      breedingDate: json['breeding_date'] ?? '',
       breedingMethod: json['breeding_method'],
       pregnancyStatus: json['pregnancy_status'],
       expectedCalvingDate: json['expected_calving_date'],
       actualCalvingDate: json['actual_calving_date'],
       outcome: json['outcome'],
       offspringId: json['offspring_id'] != null ? int.tryParse(json['offspring_id'].toString()) : null,
+      cost: double.tryParse(json['cost'].toString()) ?? 0.0,
       notes: json['notes'],
     );
   }
@@ -279,6 +294,7 @@ class BreedingRecord {
       'actual_calving_date': actualCalvingDate,
       'outcome': outcome,
       'offspring_id': offspringId,
+      'cost': cost,
       'notes': notes,
     };
   }

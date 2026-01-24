@@ -6,6 +6,7 @@ from typing import List
 from database import get_db
 import models
 import schemas
+from ledger_sync import sync_operation_to_ledger
 
 router = APIRouter(
     prefix="/health",
@@ -18,6 +19,25 @@ async def create_health_record(record: schemas.HealthRecordCreate, db: AsyncSess
     db.add(new_record)
     await db.commit()
     await db.refresh(new_record)
+    
+    # Fetch farmer_id from animal
+    result = await db.execute(select(models.Animal).where(models.Animal.animal_id == new_record.animal_id))
+    animal = result.scalars().first()
+    
+    if animal:
+        await sync_operation_to_ledger(
+            db=db,
+            farmer_id=animal.farmer_id,
+            amount=new_record.cost,
+            category="Veterinary",
+            description=f"Health treatment for {animal.name or animal.tag_number}: {new_record.condition}",
+            source_table="health_record",
+            source_id=new_record.record_id,
+            transaction_date=new_record.date,
+            related_animal_id=new_record.animal_id
+        )
+        await db.commit()
+
     return new_record
 
 @router.get("/animal/{animal_id}", response_model=List[schemas.HealthRecord])

@@ -22,9 +22,14 @@ class _FinancialTransactionFormState extends State<FinancialTransactionForm> {
     'Milk Sales', 'Animal Sales', 'Manure Sales', 'Breeding Services'
   ];
   final List<String> _expenseCategories = [
-    'Feed', 'Veterinary', 'Labor', 'Transport', 'Equipment', 
-    'Utilities', 'Breeding Costs', 'Medication', 'Other'
+    'Transport', 'Equipment', 'Utilities', 'Other'
   ];
+  
+  @override
+  void initState() {
+    super.initState();
+    _category = 'Transport';
+  }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -103,6 +108,26 @@ class _FinancialTransactionFormState extends State<FinancialTransactionForm> {
                 validator: (value) => value!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 20),
+              if (_type == 'Expense')
+                Card(
+                  color: Colors.blue.shade50,
+                  margin: const EdgeInsets.symmetric(vertical: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue.shade700),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Note: Operational expenses like Feed, Vet, and Labor are added automatically when you record those activities.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading ? const CircularProgressIndicator() : const Text('Save Transaction'),

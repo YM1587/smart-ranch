@@ -138,6 +138,7 @@ class BreedingRecordBase(BaseModel):
     actual_calving_date: Optional[date] = None
     outcome: Optional[str] = None
     offspring_id: Optional[int] = None
+    cost: Optional[Decimal] = Decimal(0)
     notes: Optional[str] = None
 
 class BreedingRecordUpdate(BaseModel):
@@ -150,6 +151,7 @@ class BreedingRecordUpdate(BaseModel):
     actual_calving_date: Optional[date] = None
     outcome: Optional[str] = None
     offspring_id: Optional[int] = None
+    cost: Optional[Decimal] = None
     notes: Optional[str] = None
 
 class BreedingRecordCreate(BreedingRecordBase):
@@ -257,6 +259,8 @@ class FinancialTransactionBase(BaseModel):
     related_animal_id: Optional[int] = None
     related_pen_id: Optional[int] = None
     buyer_supplier: Optional[str] = None
+    source_table: Optional[str] = None
+    source_id: Optional[int] = None
     notes: Optional[str] = None
 
 class FinancialTransactionCreate(FinancialTransactionBase):

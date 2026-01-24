@@ -119,6 +119,7 @@ class BreedingRecord(Base):
     actual_calving_date = Column(Date)
     outcome = Column(String(20))
     offspring_id = Column(Integer, ForeignKey("animal.animal_id", ondelete="SET NULL"))
+    cost = Column(Numeric(10, 2), default=0)
     notes = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
@@ -205,6 +206,8 @@ class FinancialTransaction(Base):
     related_animal_id = Column(Integer, ForeignKey("animal.animal_id", ondelete="SET NULL"))
     related_pen_id = Column(Integer, ForeignKey("animal_pen.pen_id", ondelete="SET NULL"))
     buyer_supplier = Column(String(100))
+    source_table = Column(String(50))
+    source_id = Column(Integer)
     notes = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 

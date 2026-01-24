@@ -23,6 +23,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
   String? _outcome;
   int? _selectedOffspringId;
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _costController = TextEditingController(text: '0');
 
   List<Animal> _females = [];
   List<Animal> _males = [];
@@ -47,6 +48,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
       _outcome = widget.existingRecord!.outcome;
       _selectedOffspringId = widget.existingRecord!.offspringId;
       _notesController.text = widget.existingRecord!.notes ?? '';
+      _costController.text = widget.existingRecord!.cost.toString();
     }
     _loadAnimals();
   }
@@ -120,6 +122,7 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
         'actual_calving_date': _actualCalvingDate?.toIso8601String().split('T')[0],
         'outcome': _outcome,
         'offspring_id': _selectedOffspringId,
+        'cost': double.tryParse(_costController.text) ?? 0.0,
         'notes': _notesController.text,
       };
 
@@ -256,6 +259,13 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
                     onChanged: (value) => setState(() => _selectedOffspringId = value),
                   ),
               ],
+              TextFormField(
+                controller: _costController,
+                decoration: const InputDecoration(labelText: 'Breeding Cost (KES)', icon: Icon(Icons.payments)),
+                keyboardType: TextInputType.number,
+                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(labelText: 'Notes'),
