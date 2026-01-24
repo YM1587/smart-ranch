@@ -10,6 +10,7 @@ import 'screens/forms/breeding_record_form.dart';
 import 'screens/forms/feed_log_form.dart';
 import 'screens/forms/health_record_form.dart';
 import 'screens/forms/labor_activity_form.dart';
+import 'screens/forms/financial_transaction_form.dart';
 import 'screens/forms/farmer_form.dart';
 
 void main() {
@@ -128,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
               _buildActionTile(context, 'Feed Log', Icons.grass, () => const FeedLogForm(farmerId: farmerId)),
               _buildActionTile(context, 'Health', Icons.medical_services, () => const HealthRecordForm(farmerId: farmerId)),
               _buildActionTile(context, 'Labor', Icons.work, () => const LaborActivityForm(farmerId: farmerId)),
-              _buildActionTile(context, 'Finance', Icons.monetization_on, () => const FinanceScreen()),
+              _buildActionTile(context, 'Finance', Icons.monetization_on, () => const FinancialTransactionForm(farmerId: farmerId)),
               _buildActionTile(context, 'Settings', Icons.settings, () => const FarmerForm()),
             ],
           ),
