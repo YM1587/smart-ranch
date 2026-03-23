@@ -49,8 +49,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<FinancialTransaction> _transactions = [];
 
   // Alerts
-  List<DashboardAlert> _criticalAlerts = [];
-  List<DashboardAlert> _warningAlerts = [];
+  List<Alert> _alerts = [];
+  bool _showAllAlerts = false;
 
   @override
   void initState() {
@@ -83,190 +83,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _breedingRecords = results[6] as List<BreedingRecord>;
         _laborActivities = results[7] as List<LaborActivity>;
         _transactions = results[8] as List<FinancialTransaction>;
-        _isLoading = false;
       });
 
-      _evaluateAlerts();
+      _fetchAlerts();
     } catch (e) {
       print("Error fetching dashboard data: $e");
       setState(() => _isLoading = false);
     }
   }
 
-  void _evaluateAlerts() {
-    _criticalAlerts.clear();
-    _warningAlerts.clear();
-
-    // CRITICAL ALERT 1: Animal Under Treatment Too Long
-    final now = DateTime.now();
-    for (var event in _healthEvents) {
-      if (event.nextCheckupDate != null) {
-        final checkupDate = DateTime.tryParse(event.nextCheckupDate!);
-        final eventDate = DateTime.tryParse(event.eventDate);
-        if (checkupDate != null && eventDate != null) {
-          final daysSinceEvent = now.difference(eventDate).inDays;
-          final expectedDays = checkupDate.difference(eventDate).inDays;
-          if (daysSinceEvent > expectedDays && daysSinceEvent > 3) {
-            final animal = _animals.firstWhere((a) => a.id == event.animalId, orElse: () => _animals.first);
-            _criticalAlerts.add(DashboardAlert(
-              severity: 'critical',
-              title: '${animal.name ?? animal.tagNumber} under treatment too long',
-              description: '$daysSinceEvent days (Expected: $expectedDays)',
-              icon: Icons.medical_services,
-              color: Colors.red,
-            ));
-          }
-        }
-      }
+  Future<void> _fetchAlerts() async {
+    try {
+      final alerts = await ApiService.getAlerts(farmerId);
+      setState(() {
+        _alerts = alerts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching alerts: $e");
+      setState(() => _isLoading = false);
     }
-
-    // CRITICAL ALERT 2: Sudden Drop in Individual Production
-    Map<int, List<double>> animalProduction = {};
-    for (var record in _milkRecords) {
-      animalProduction.putIfAbsent(record.animalId, () => []).add(record.totalYield);
-    }
-    
-    animalProduction.forEach((animalId, yields) {
-      if (yields.length >= 3) {
-        final recent3 = yields.sublist(yields.length - 3);
-        final avg = yields.reduce((a, b) => a + b) / yields.length;
-        final recentAvg = recent3.reduce((a, b) => a + b) / 3;
-        if (avg > 0 && ((avg - recentAvg) / avg) >= 0.3) {
-          final animal = _animals.firstWhere((a) => a.id == animalId, orElse: () => _animals.first);
-          _criticalAlerts.add(DashboardAlert(
-            severity: 'critical',
-            title: '${animal.name ?? animal.tagNumber} production dropped 30%+',
-            description: 'Recent avg: ${recentAvg.toStringAsFixed(1)}L vs ${avg.toStringAsFixed(1)}L',
-            icon: Icons.trending_down,
-            color: Colors.red,
-          ));
-        }
-      }
-    });
-
-    // CRITICAL ALERT 3: Mortality Event
-    final deadAnimals = _animals.where((a) => a.status?.toLowerCase() == 'dead').toList();
-    for (var animal in deadAnimals) {
-      _criticalAlerts.add(DashboardAlert(
-        severity: 'critical',
-        title: 'Mortality: ${animal.name ?? animal.tagNumber}',
-        description: 'Disposal reason: ${animal.disposalReason ?? "Not specified"}',
-        icon: Icons.dangerous,
-        color: Colors.red,
-      ));
-    }
-
-    // CRITICAL ALERT 4: Operating Cost per Animal Exceeded
-    final totalExpenses = _transactions.where((t) => t.type == 'Expense').fold(0.0, (sum, t) => sum + t.amount);
-    final costPerAnimal = _animals.isNotEmpty ? totalExpenses / _animals.length : 0;
-    if (costPerAnimal > 5000) {
-      _criticalAlerts.add(DashboardAlert(
-        severity: 'critical',
-        title: 'Operating cost per animal exceeded',
-        description: 'KES ${costPerAnimal.toStringAsFixed(0)} per animal (Threshold: 5000)',
-        icon: Icons.attach_money,
-        color: Colors.red,
-      ));
-    }
-
-    // CRITICAL ALERT 5: Negative Cash Flow
-    final thisMonth = now.month;
-    final thisYear = now.year;
-    final monthlyIncome = _transactions.where((t) {
-      final date = DateTime.tryParse(t.date);
-      return t.type == 'Income' && date != null && date.month == thisMonth && date.year == thisYear;
-    }).fold(0.0, (sum, t) => sum + t.amount);
-    
-    final monthlyExpenses = _transactions.where((t) {
-      final date = DateTime.tryParse(t.date);
-      return t.type == 'Expense' && date != null && date.month == thisMonth && date.year == thisYear;
-    }).fold(0.0, (sum, t) => sum + t.amount);
-
-    if (monthlyExpenses > monthlyIncome) {
-      _criticalAlerts.add(DashboardAlert(
-        severity: 'critical',
-        title: 'Negative cash flow this month',
-        description: 'Expenses exceed income by KES ${(monthlyExpenses - monthlyIncome).toStringAsFixed(0)}',
-        icon: Icons.money_off,
-        color: Colors.red,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceScreen())),
-      ));
-    }
-
-    // CRITICAL ALERT 6: Feed Consumption Spike
-    final last7Days = now.subtract(const Duration(days: 7));
-    final prev7Days = now.subtract(const Duration(days: 14));
-    
-    final recentFeed = _penFeedLogs.where((l) {
-      final date = DateTime.tryParse(l.logDate);
-      return date != null && date.isAfter(last7Days);
-    }).fold(0.0, (sum, l) => sum + l.cost);
-    
-    final previousFeed = _penFeedLogs.where((l) {
-      final date = DateTime.tryParse(l.logDate);
-      return date != null && date.isAfter(prev7Days) && date.isBefore(last7Days);
-    }).fold(0.0, (sum, l) => sum + l.cost);
-
-    final recentMilk = _milkRecords.where((r) {
-      final date = DateTime.tryParse(r.date);
-      return date != null && date.isAfter(last7Days);
-    }).fold(0.0, (sum, r) => sum + r.totalYield);
-    
-    final previousMilk = _milkRecords.where((r) {
-      final date = DateTime.tryParse(r.date);
-      return date != null && date.isAfter(prev7Days) && date.isBefore(last7Days);
-    }).fold(0.0, (sum, r) => sum + r.totalYield);
-
-    if (previousFeed > 0 && recentFeed > previousFeed * 1.2 && recentMilk <= previousMilk) {
-      _criticalAlerts.add(DashboardAlert(
-        severity: 'critical',
-        title: 'Feed consumption spike detected',
-        description: '+${((recentFeed - previousFeed) / previousFeed * 100).toStringAsFixed(0)}% without production increase',
-        icon: Icons.grass,
-        color: Colors.orange,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OperationsDashboardScreen())),
-      ));
-    }
-
-    // WARNING ALERT 8: Herd Average Production Declining
-    if (_milkRecords.length >= 14) {
-      final sortedRecords = _milkRecords.toList()..sort((a, b) => a.date.compareTo(b.date));
-      final recent7 = sortedRecords.sublist(sortedRecords.length - 7);
-      final previous7 = sortedRecords.sublist(sortedRecords.length - 14, sortedRecords.length - 7);
-      
-      final recentAvg = recent7.fold(0.0, (sum, r) => sum + r.totalYield) / 7;
-      final prevAvg = previous7.fold(0.0, (sum, r) => sum + r.totalYield) / 7;
-      
-      if (prevAvg > 0 && ((prevAvg - recentAvg) / prevAvg) >= 0.10) {
-        _warningAlerts.add(DashboardAlert(
-          severity: 'warning',
-          title: 'Herd average production declining',
-          description: '${((prevAvg - recentAvg) / prevAvg * 100).toStringAsFixed(0)}% drop over 7 days',
-          icon: Icons.trending_down,
-          color: Colors.orange,
-        ));
-      }
-    }
-
-    // WARNING ALERT 11: Missed Scheduled Activity
-    for (var event in _healthEvents) {
-      if (event.nextCheckupDate != null) {
-        final checkupDate = DateTime.tryParse(event.nextCheckupDate!);
-        if (checkupDate != null && checkupDate.isBefore(now)) {
-          final animal = _animals.firstWhere((a) => a.id == event.animalId, orElse: () => _animals.first);
-          _warningAlerts.add(DashboardAlert(
-            severity: 'warning',
-            title: 'Overdue checkup: ${animal.name ?? animal.tagNumber}',
-            description: 'Due: ${DateFormat('MMM d').format(checkupDate)}',
-            icon: Icons.event_busy,
-            color: Colors.orange,
-          ));
-        }
-      }
-    }
-
-    setState(() {});
   }
+
+  Future<void> _dismissAlert(int alertId) async {
+    try {
+      await ApiService.dismissAlert(alertId);
+      setState(() {
+        _alerts.removeWhere((a) => a.id == alertId);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  // Logic removed as it's now handled by the backend /alerts endpoint
 
   @override
   Widget build(BuildContext context) {
@@ -527,6 +377,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAlertsSection() {
+    if (_alerts.isEmpty) return const SizedBox.shrink();
+
+    final criticalAlerts = _alerts.where((a) => a.type == 'CRITICAL').toList();
+    final warningAlerts = _alerts.where((a) => a.type != 'CRITICAL').toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -534,94 +389,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
           child: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, size: 20, color: Colors.red),
+              Icon(Icons.bolt, size: 20, color: Colors.amber),
               const SizedBox(width: 8),
-              const Text('Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('Smart Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('🔴 ${_criticalAlerts.length}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
+              _buildAlertBadge('Crit', criticalAlerts.length, Colors.red),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('🟨 ${_warningAlerts.length}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
+              _buildAlertBadge('Warn', warningAlerts.length, Colors.orange),
             ],
           ),
         ),
-        if (_criticalAlerts.isEmpty && _warningAlerts.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 24),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'All systems operational. No alerts at this time.',
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ],
-              ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: _alerts.length > 3 && !_showAllAlerts ? 3 : _alerts.length,
+          itemBuilder: (context, index) {
+            final alert = _alerts[index];
+            return _buildAlertCard(alert);
+          },
+        ),
+        if (_alerts.length > 3)
+          TextButton(
+            onPressed: () => setState(() => _showAllAlerts = !_showAllAllAlerts),
+            child: Center(
+              child: Text(_showAllAlerts ? 'Show Less' : 'View All ${_alerts.length} Alerts'),
             ),
           ),
-        if (_criticalAlerts.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Critical Alerts', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.red)),
-                const SizedBox(height: 8),
-                ..._criticalAlerts.map((alert) => _buildAlertCard(alert)),
-              ],
-            ),
-          ),
-        ],
-        if (_warningAlerts.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: InkWell(
-              onTap: () => setState(() => _showWarnings = !_showWarnings),
-              child: Row(
-                children: [
-                  Icon(_showWarnings ? Icons.expand_less : Icons.expand_more, size: 20),
-                  const SizedBox(width: 4),
-                  Text('Warnings (${_warningAlerts.length})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.orange)),
-                ],
-              ),
-            ),
-          ),
-          if (_showWarnings) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: _warningAlerts.map((alert) => _buildAlertCard(alert)).toList(),
-              ),
-            ),
-          ],
-        ],
-        const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildAlertBadge(String label, int count, Color color) {
+    if (count == 0) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text('$label $count', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+    );
+  }
+
+  Widget _buildAlertCard(Alert alert) {
+    final color = alert.type == 'CRITICAL' ? Colors.red : Colors.orange;
+    final icon = alert.type == 'CRITICAL' ? Icons.error_outline : Icons.warning_amber_rounded;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4)],
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(alert.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        subtitle: Text(alert.message, style: const TextStyle(fontSize: 12)),
+        trailing: IconButton(
+          icon: const Icon(Icons.close, size: 16),
+          onPressed: () => _dismissAlert(alert.id),
+        ),
+        onTap: alert.relatedAnimalId != null ? () {
+          // TODO: Navigate to Animal Profile
+        } : null,
+      ),
     );
   }
 

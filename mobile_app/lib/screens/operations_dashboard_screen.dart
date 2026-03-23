@@ -24,15 +24,18 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
   List<BreedingRecord> _breedingRecords = [];
   List<LaborActivity> _laborActivities = [];
 
+  Map<String, dynamic> _healthSummary = {};
+  Map<String, dynamic> _breedingSummary = {};
+  List<dynamic> _sickAnimals = [];
+  List<dynamic> _pregnantAnimals = [];
+  List<dynamic> _dueSoonAnimals = [];
+
   @override
   void initState() {
     super.initState();
     _fetchData();
   }
 
-  Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    try {
       final results = await Future.wait([
         ApiService.getAnimals(farmerId),
         ApiService.getAllHealthEvents(farmerId),
@@ -42,6 +45,11 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
         ApiService.getAllWeightRecords(farmerId),
         ApiService.getAllBreedingRecords(farmerId),
         ApiService.getAllLaborActivities(farmerId),
+        ApiService.getHealthSummary(farmerId),
+        ApiService.getBreedingSummary(farmerId),
+        ApiService.getSickAnimals(farmerId),
+        ApiService.getPregnantAnimals(farmerId),
+        ApiService.getDueSoonAnimals(farmerId),
       ]);
 
       setState(() {
@@ -53,6 +61,11 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
         _weightRecords = results[5] as List<WeightRecord>;
         _breedingRecords = results[6] as List<BreedingRecord>;
         _laborActivities = results[7] as List<LaborActivity>;
+        _healthSummary = results[8] as Map<String, dynamic>;
+        _breedingSummary = results[9] as Map<String, dynamic>;
+        _sickAnimals = results[10] as List<dynamic>;
+        _pregnantAnimals = results[11] as List<dynamic>;
+        _dueSoonAnimals = results[12] as List<dynamic>;
         _isLoading = false;
       });
     } catch (e) {
@@ -266,27 +279,79 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
   }
 
   // --- 2. HEALTH SECTION ---
-  Widget _buildHealthSection() {
-    final now = DateTime.now();
-    final thisMonth = _healthEvents.where((e) {
-      final date = DateTime.tryParse(e.eventDate);
-      return date != null && date.year == now.year && date.month == now.month;
-    }).toList();
-    
-    final totalHealthCost = thisMonth.fold(0.0, (sum, item) => sum + (item.cost ?? 0));
-    final activeCases = thisMonth.length;
-    
+    int sickCount = _healthSummary['sick'] ?? 0;
+    int underTreatmentCount = _healthSummary['under_treatment'] ?? 0;
+
     return _buildSectionCard(
-      'Health & Veterinary',
+      'Health Status',
       [
-        _buildTreatmentDistChart(),
-        const SizedBox(height: 16),
-        _buildMetricRow([
-          _buildDetailMetric('Active Cases', '$activeCases', 'This Month'),
-          _buildDetailMetric('Vet Expenditure', NumberFormat.compactCurrency(symbol: 'KES ').format(totalHealthCost), 'This Month'),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatusCounter('Sick', sickCount, Colors.red),
+            _buildStatusCounter('Treatment', underTreatmentCount, Colors.orange),
+          ],
+        ),
+        if (_sickAnimals.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Needs Attention', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.red)),
+          const SizedBox(height: 8),
+          ..._sickAnimals.map((a) => _buildActionableAnimalRow(a, 'Sick')),
+        ],
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton.icon(
+            onPressed: () {
+              // Open Health Record Form
+            },
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('New Health Record'),
+            style: TextButton.styleFrom(foregroundColor: Colors.blue),
+          ),
+        )
       ],
       Icons.medical_services,
+    );
+  }
+
+  Widget _buildStatusCounter(String label, int count, Color color) {
+    return Column(
+      children: [
+        Text('$count', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildActionableAnimalRow(dynamic a, String status) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: Colors.blue.withOpacity(0.1),
+            child: Text(a['tag_number'][0], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(a['name'] ?? a['tag_number'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(a['condition'] ?? a['expected_calving_date'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        ],
+      ),
     );
   }
 
@@ -311,22 +376,29 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
   }
 
   // --- 4. BREEDING SECTION ---
-  Widget _buildBreedingSection() {
-    final totalBreedings = _breedingRecords.length;
-    final pregnant = _breedingRecords.where((r) => r.pregnancyStatus == 'Pregnant').length;
-    final successRate = totalBreedings > 0 ? ((pregnant / totalBreedings) * 100) : 0.0;
-    
+    int pregnantCount = _breedingSummary['pregnant'] ?? 0;
+    int dueSoonCount = _breedingSummary['due_soon'] ?? 0;
+    int failedCount = _breedingSummary['failed'] ?? 0;
+
     return _buildSectionCard(
-      'Breeding & Reproduction',
+      'Breeding Status',
       [
-        _buildBreedingFunnel(),
-        const SizedBox(height: 16),
-        _buildMetricRow([
-          _buildDetailMetric('Success Rate', '${successRate.toStringAsFixed(0)}%', 'Pregnancy'),
-          _buildDetailMetric('Total Records', '$totalBreedings', 'All Time'),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatusCounter('Pregnant', pregnantCount, Colors.purple),
+            _buildStatusCounter('Due Soon', dueSoonCount, Colors.blue),
+            _buildStatusCounter('Failed', failedCount, Colors.red),
+          ],
+        ),
+        if (_dueSoonAnimals.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Due Soon', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue)),
+          const SizedBox(height: 8),
+          ..._dueSoonAnimals.map((a) => _buildActionableAnimalRow(a, 'Due Soon')),
+        ],
       ],
-      Icons.favorite,
+      Icons.pregnant_woman,
     );
   }
 
