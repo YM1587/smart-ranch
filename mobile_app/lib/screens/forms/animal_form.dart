@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../models/models.dart';
-
+import 'animal_disposal_form.dart';
 class AnimalForm extends StatefulWidget {
   final int farmerId;
   final Animal? animal;
@@ -277,6 +277,26 @@ class _AnimalFormState extends State<AnimalForm> {
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading ? const CircularProgressIndicator() : Text(widget.animal != null ? 'Update Animal' : 'Add Animal'),
               ),
+              if (widget.animal != null && widget.animal!.status != 'Disposed') ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal!)),
+                    ).then((_) {
+                      // Optionally close the form when returning from disposal
+                      Navigator.pop(context);
+                    });
+                  },
+                  icon: const Icon(Icons.archive, color: Colors.red),
+                  label: const Text('Dispose / Archive Animal', style: TextStyle(color: Colors.red)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

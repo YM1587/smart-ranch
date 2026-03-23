@@ -130,6 +130,27 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
                         },
                       ),
           ),
+          if (widget.animal.status != 'Disposed')
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal)),
+                    ).then((_) => Navigator.pop(context));
+                  },
+                  icon: const Icon(Icons.archive, color: Colors.red),
+                  label: const Text('Dispose / Archive Animal', style: TextStyle(color: Colors.red)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
