@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import and_, or_, func
 from typing import List
+from datetime import date, timedelta
 
 from database import get_db
 import models
 import schemas
+from models import Animal, BreedingRecord
 from ledger_sync import sync_operation_to_ledger
 
 router = APIRouter(
@@ -138,3 +141,117 @@ async def update_breeding_record(breeding_id: int, record: schemas.BreedingRecor
     await db.commit()
     await db.refresh(db_record)
     return db_record
+
+# --- BREEDING INTELLIGENCE ENDPOINTS ---
+
+@router.get("/breeding-summary")
+async def get_breeding_summary(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    pregnant_query = select(func.count(BreedingRecord.breeding_id)).join(Animal, Animal.animal_id == BreedingRecord.female_id).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Confirmed",
+            BreedingRecord.actual_calving_date == None
+        )
+    )
+    pregnant_result = await db.execute(pregnant_query)
+    pregnant_count = pregnant_result.scalar_one()
+    
+    due_soon_date = date.today() + timedelta(days=30)
+    due_soon_query = select(func.count(BreedingRecord.breeding_id)).join(Animal, Animal.animal_id == BreedingRecord.female_id).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Confirmed",
+            BreedingRecord.actual_calving_date == None,
+            BreedingRecord.expected_calving_date <= due_soon_date
+        )
+    )
+    due_soon_result = await db.execute(due_soon_query)
+    due_soon_count = due_soon_result.scalar_one()
+    
+    failed_query = select(func.count(BreedingRecord.breeding_id)).join(Animal, Animal.animal_id == BreedingRecord.female_id).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Failed"
+        )
+    )
+    failed_result = await db.execute(failed_query)
+    failed_count = failed_result.scalar_one()
+    
+    return {
+        "pregnant": pregnant_count,
+        "due_soon": due_soon_count,
+        "failed": failed_count
+    }
+
+@router.get("/breeding/pregnant")
+async def get_pregnant_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    query = select(Animal, BreedingRecord).join(
+        BreedingRecord, Animal.animal_id == BreedingRecord.female_id
+    ).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Confirmed",
+            BreedingRecord.actual_calving_date == None
+        )
+    )
+    result = await db.execute(query)
+    
+    return [
+        {
+            "animal_id": a.animal_id,
+            "tag_number": a.tag_number,
+            "name": a.name,
+            "breed": a.breed,
+            "expected_calving_date": br.expected_calving_date,
+            "status": "Pregnant"
+        } for a, br in result.all()
+    ]
+
+@router.get("/breeding/due-soon")
+async def get_due_soon_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    due_soon_date = date.today() + timedelta(days=30)
+    query = select(Animal, BreedingRecord).join(
+        BreedingRecord, Animal.animal_id == BreedingRecord.female_id
+    ).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Confirmed",
+            BreedingRecord.actual_calving_date == None,
+            BreedingRecord.expected_calving_date <= due_soon_date
+        )
+    )
+    result = await db.execute(query)
+    
+    return [
+        {
+            "animal_id": a.animal_id,
+            "tag_number": a.tag_number,
+            "name": a.name,
+            "breed": a.breed,
+            "expected_calving_date": br.expected_calving_date,
+            "status": "Due Soon"
+        } for a, br in result.all()
+    ]
+
+@router.get("/breeding/failed")
+async def get_failed_breeding_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):
+    query = select(Animal, BreedingRecord).join(
+        BreedingRecord, Animal.animal_id == BreedingRecord.female_id
+    ).where(
+        and_(
+            Animal.farmer_id == farmer_id,
+            BreedingRecord.pregnancy_status == "Failed"
+        )
+    )
+    result = await db.execute(query)
+    
+    return [
+        {
+            "animal_id": a.animal_id,
+            "tag_number": a.tag_number,
+            "name": a.name,
+            "breed": a.breed,
+            "breeding_date": br.breeding_date,
+            "status": "Failed"
+        } for a, br in result.all()
+    ]

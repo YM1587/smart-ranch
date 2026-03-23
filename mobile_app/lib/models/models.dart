@@ -31,12 +31,15 @@ class Animal {
   final int? penId;
   final String? breed;
   final String? sex;
-  final String? status;
+  final String status; // Changed to non-nullable
   final String? animalType;
   final String? birthDate;
-  final String? acquisitionType;
-  final double? acquisitionCost;
+  final String acquisitionType; // Changed to non-nullable
+  final double acquisitionCost; // Changed to non-nullable
   final String? disposalReason;
+  final DateTime? disposalDate; // Added
+  final double? disposalValue; // Added
+  final String? notes; // Added
 
   Animal({
     required this.id,
@@ -45,12 +48,15 @@ class Animal {
     this.penId,
     this.breed,
     this.sex,
-    this.status,
+    this.status = 'Active', // Default value added
     this.animalType,
     this.birthDate,
-    this.acquisitionType,
-    this.acquisitionCost,
+    required this.acquisitionType, // Changed to required
+    this.acquisitionCost = 0.0, // Default value added
     this.disposalReason,
+    this.disposalDate, // Added
+    this.disposalValue, // Added
+    this.notes, // Added
   });
 
   factory Animal.fromJson(Map<String, dynamic> json) {
@@ -61,14 +67,17 @@ class Animal {
       penId: json['pen_id'] != null ? int.tryParse(json['pen_id'].toString()) : null,
       breed: json['breed'],
       sex: json['gender'],
-      status: json['status'],
+      status: json['status'] ?? 'Active', // Handle null status from JSON
       animalType: json['animal_type'],
       birthDate: json['birth_date'],
-      acquisitionType: json['acquisition_type'],
+      acquisitionType: json['acquisition_type'] ?? '', // Handle null acquisition_type from JSON
       acquisitionCost: json['acquisition_cost'] != null 
-          ? double.tryParse(json['acquisition_cost'].toString()) 
-          : null,
+          ? double.tryParse(json['acquisition_cost'].toString()) ?? 0.0
+          : 0.0,
       disposalReason: json['disposal_reason'],
+      disposalDate: json['disposal_date'] != null ? DateTime.tryParse(json['disposal_date']) : null, // Added
+      disposalValue: json['disposal_value'] != null ? double.tryParse(json['disposal_value'].toString()) : null, // Added
+      notes: json['notes'], // Added
     );
   }
 

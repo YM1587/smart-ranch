@@ -45,6 +45,24 @@ async def create_animal(animal: schemas.AnimalCreate, db: AsyncSession = Depends
     await db.refresh(new_animal)
     return new_animal
 
+@router.post("/{animal_id}/dispose", response_model=schemas.Animal)
+async def dispose_animal(animal_id: int, disposal: schemas.AnimalDispose, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.Animal).where(models.Animal.animal_id == animal_id))
+    animal = result.scalars().first()
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+    
+    animal.status = "Disposed"
+    animal.disposal_reason = disposal.disposal_reason
+    animal.disposal_date = disposal.disposal_date
+    animal.disposal_value = disposal.disposal_value
+    if disposal.notes:
+        animal.notes = (animal.notes or "") + f"\nDisposal Notes: {disposal.notes}"
+    
+    await db.commit()
+    await db.refresh(animal)
+    return animal
+
 @router.get("/farmer/{farmer_id}", response_model=List[schemas.Animal])
 async def read_animals_by_farmer(farmer_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Animal).where(models.Animal.farmer_id == farmer_id))
