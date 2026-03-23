@@ -21,7 +21,7 @@ class Farmer(FarmerBase):
     last_login: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- ANIMAL PEN SCHEMAS ---
 class AnimalPenBase(BaseModel):
@@ -39,7 +39,7 @@ class AnimalPen(AnimalPenBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- ANIMAL SCHEMAS ---
 class AnimalBase(BaseModel):
@@ -85,7 +85,13 @@ class Animal(AnimalBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class AnimalDispose(BaseModel):
+    disposal_reason: str
+    disposal_date: date
+    disposal_value: Optional[Decimal] = None
+    notes: Optional[str] = None
 
 # --- MILK PRODUCTION SCHEMAS ---
 class MilkProductionBase(BaseModel):
@@ -107,7 +113,7 @@ class MilkProduction(MilkProductionBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- WEIGHT RECORD SCHEMAS ---
 class WeightRecordBase(BaseModel):
@@ -125,7 +131,7 @@ class WeightRecord(WeightRecordBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- BREEDING RECORD SCHEMAS ---
 class BreedingRecordBase(BaseModel):
@@ -162,7 +168,7 @@ class BreedingRecord(BreedingRecordBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- FEED LOG SCHEMAS ---
 class FeedLogBase(BaseModel):
@@ -182,7 +188,7 @@ class FeedLog(FeedLogBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- INDIVIDUAL FEED LOG SCHEMAS ---
 class IndividualFeedLogBase(BaseModel):
@@ -202,7 +208,7 @@ class IndividualFeedLog(IndividualFeedLogBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- HEALTH RECORD SCHEMAS ---
 class HealthRecordBase(BaseModel):
@@ -224,7 +230,7 @@ class HealthRecord(HealthRecordBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- LABOR ACTIVITY SCHEMAS ---
 class LaborActivityBase(BaseModel):
@@ -246,7 +252,7 @@ class LaborActivity(LaborActivityBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- FINANCIAL TRANSACTION SCHEMAS ---
 class FinancialTransactionBase(BaseModel):
@@ -271,7 +277,7 @@ class FinancialTransaction(FinancialTransactionBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- PERFORMANCE CACHE SCHEMAS ---
 class PerformanceCacheBase(BaseModel):
@@ -290,6 +296,26 @@ class PerformanceCacheCreate(PerformanceCacheBase):
 class PerformanceCache(PerformanceCacheBase):
     cache_id: int
     calculated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# --- ALERT SCHEMAS ---
+class AlertBase(BaseModel):
+    title: str
+    message: str
+    type: str  # CRITICAL, WARNING, INFO
+    animal_id: Optional[int] = None
+    is_dismissed: bool = False
+
+class AlertCreate(AlertBase):
+    farmer_id: int
+
+class Alert(AlertBase):
+    id: int
+    farmer_id: int
+    created_at: datetime
+    dismissed_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
