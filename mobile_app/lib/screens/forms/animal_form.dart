@@ -283,7 +283,7 @@ class _AnimalFormState extends State<AnimalForm> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal!)),
+                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal!, farmerId: widget.farmerId)),
                     ).then((_) {
                       // Optionally close the form when returning from disposal
                       Navigator.pop(context);

@@ -139,7 +139,7 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal)),
+                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal, farmerId: 1)),
                     ).then((_) => Navigator.pop(context));
                   },
                   icon: const Icon(Icons.archive, color: Colors.red),
