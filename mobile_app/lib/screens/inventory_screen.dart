@@ -122,7 +122,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ),
     );
   }
-  }
 
   Widget _buildDisposedAnimalTile(Animal animal) {
     return ListTile(
