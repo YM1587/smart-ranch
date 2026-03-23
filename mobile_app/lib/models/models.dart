@@ -430,3 +430,38 @@ class IndividualFeedLog {
     );
   }
 }
+
+class Alert {
+  final int id;
+  final int farmerId;
+  final String title;
+  final String message;
+  final String type;
+  final int? relatedAnimalId;
+  final DateTime createdAt;
+  final DateTime? dismissedAt;
+
+  Alert({
+    required this.id,
+    required this.farmerId,
+    required this.title,
+    required this.message,
+    required this.type,
+    this.relatedAnimalId,
+    required this.createdAt,
+    this.dismissedAt,
+  });
+
+  factory Alert.fromJson(Map<String, dynamic> json) {
+    return Alert(
+      id: json['id'],
+      farmerId: json['farmer_id'],
+      title: json['title'],
+      message: json['message'],
+      type: json['type'],
+      relatedAnimalId: json['animal_id'],
+      createdAt: DateTime.parse(json['created_at']),
+      dismissedAt: json['dismissed_at'] != null ? DateTime.parse(json['dismissed_at']) : null,
+    );
+  }
+}

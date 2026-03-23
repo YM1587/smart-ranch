@@ -35,7 +35,9 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
     super.initState();
     _fetchData();
   }
-
+  Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
+    try {
       final results = await Future.wait([
         ApiService.getAnimals(farmerId),
         ApiService.getAllHealthEvents(farmerId),
@@ -278,7 +280,7 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
     );
   }
 
-  // --- 2. HEALTH SECTION ---
+  Widget _buildHealthSection() {
     int sickCount = _healthSummary['sick'] ?? 0;
     int underTreatmentCount = _healthSummary['under_treatment'] ?? 0;
 
@@ -375,7 +377,7 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
     );
   }
 
-  // --- 4. BREEDING SECTION ---
+  Widget _buildBreedingSection() {
     int pregnantCount = _breedingSummary['pregnant'] ?? 0;
     int dueSoonCount = _breedingSummary['due_soon'] ?? 0;
     int failedCount = _breedingSummary['failed'] ?? 0;

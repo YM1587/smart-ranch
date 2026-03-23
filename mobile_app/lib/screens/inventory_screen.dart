@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
+import 'package:intl/intl.dart';
 import 'animal_health_screen.dart';
 import 'breeding_history_screen.dart';
 import 'forms/animal_form.dart';
@@ -59,6 +60,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     ).then((_) => _loadData()); // Refresh after adding
   }
 
+  @override
+  Widget build(BuildContext context) {
     final activeAnimals = _allAnimals.where((a) => a.status != 'Disposed').toList();
     final disposedAnimals = _allAnimals.where((a) => a.status == 'Disposed').toList();
     
@@ -118,6 +121,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
       ),
     );
+  }
   }
 
   Widget _buildDisposedAnimalTile(Animal animal) {

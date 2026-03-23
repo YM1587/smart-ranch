@@ -6,24 +6,6 @@ import '../models/models.dart';
 import 'finance_screen.dart';
 import 'operations_dashboard_screen.dart';
 
-// Alert Model
-class DashboardAlert {
-  final String severity; // 'critical', 'warning', 'info'
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  DashboardAlert({
-    required this.severity,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
-}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -411,7 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         if (_alerts.length > 3)
           TextButton(
-            onPressed: () => setState(() => _showAllAlerts = !_showAllAllAlerts),
+            onPressed: () => setState(() => _showAllAlerts = !_showAllAlerts),
             child: Center(
               child: Text(_showAllAlerts ? 'Show Less' : 'View All ${_alerts.length} Alerts'),
             ),
@@ -536,40 +518,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAlertCard(DashboardAlert alert) {
-    return InkWell(
-      onTap: alert.onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: alert.color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: alert.color.withOpacity(0.3)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(alert.icon, color: alert.color, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(alert.title, style: TextStyle(fontWeight: FontWeight.bold, color: alert.color, fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text(alert.description, style: TextStyle(fontSize: 11, color: Colors.grey[700])),
-                  if (alert.onTap != null) ...[
-                    const SizedBox(height: 4),
-                    Text('→ Tap to view', style: TextStyle(fontSize: 10, color: alert.color, fontWeight: FontWeight.w500)),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 }
