@@ -350,8 +350,31 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
                 Text(a['condition'] ?? a['expected_calving_date'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
-          ),
-          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+          if (status == 'Sick' && a['record_id'] != null)
+            TextButton.icon(
+              onPressed: () async {
+                try {
+                  await ApiService.resolveHealthRecord(a['record_id']);
+                  _fetchData(); // Refresh dashboard data
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Animal marked as treated')));
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                  }
+                }
+              },
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: const Text('Treated'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(80, 36),
+              ),
+            )
+          else
+            const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
         ],
       ),
     );

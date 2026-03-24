@@ -105,9 +105,23 @@ async def get_sick_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):
             "name": a.name,
             "condition": hr.condition,
             "date": hr.date,
-            "status": "Sick"
+            "status": "Sick",
+            "record_id": hr.record_id
         } for a, hr in result.all()
     ]
+
+@router.post("/{record_id}/resolve")
+async def resolve_health_record(record_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.HealthRecord).where(models.HealthRecord.record_id == record_id))
+    record = result.scalars().first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Health record not found")
+    
+    # Resolves the condition by scheduling a checkup today
+    record.next_checkup_date = date.today()
+    await db.commit()
+    await db.refresh(record)
+    return {"status": "resolved"}
 
 @router.get("/under-treatment")
 async def get_under_treatment_animals(farmer_id: int, db: AsyncSession = Depends(get_db)):

@@ -288,6 +288,23 @@ class ApiService {
   }
 
   static Future<void> disposeAnimal(int animalId, Map<String, dynamic> data) async {
-    await _post('animals/$animalId/dispose', data);
+    final response = await http.post(
+      Uri.parse('$baseUrl/animals/$animalId/dispose'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(data)
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to dispose animal: ${response.body}');
+    }
+  }
+
+  static Future<void> resolveHealthRecord(int recordId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/health/$recordId/resolve'),
+      headers: {"Content-Type": "application/json"},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to resolve health record: ${response.body}');
+    }
   }
 }
