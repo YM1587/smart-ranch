@@ -104,8 +104,35 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Breed: ${widget.animal.breed ?? 'Unknown'}", style: const TextStyle(fontSize: 16)),
-                Text("Status: ${widget.animal.status}", style: const TextStyle(fontSize: 16)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Breed: ${widget.animal.breed ?? 'Unknown'}", style: const TextStyle(fontSize: 16)),
+                        Text("Status: ${widget.animal.status}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    if (widget.animal.sex == 'Female')
+                      InkWell(
+                        onTap: () {
+                           Navigator.push(context, MaterialPageRoute(builder: (context) => BreedingHistoryScreen(animal: widget.animal)));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(color: Colors.purple.shade100, borderRadius: BorderRadius.circular(20)),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.auto_awesome, size: 16, color: Colors.purple),
+                              SizedBox(width: 4),
+                              Text("Reproduction", style: TextStyle(color: Colors.purple, fontSize: 13, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -139,11 +166,13 @@ class _AnimalHealthScreenState extends State<AnimalHealthScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal, farmerId: 1)),
-                    ).then((_) => Navigator.pop(context));
+                      MaterialPageRoute(builder: (context) => AnimalDisposalForm(animal: widget.animal, farmerId: ApiService.farmerId)),
+                    ).then((_) {
+                       if (context.mounted) Navigator.pop(context);
+                    });
                   },
                   icon: const Icon(Icons.archive, color: Colors.red),
-                  label: const Text('Dispose / Archive Animal', style: TextStyle(color: Colors.red)),
+                  label: const Text('Dispose (Died/Sold/Other)', style: TextStyle(color: Colors.red)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.red),
                     padding: const EdgeInsets.symmetric(vertical: 16),

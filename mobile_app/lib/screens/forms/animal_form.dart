@@ -26,6 +26,7 @@ class _AnimalFormState extends State<AnimalForm> {
     'Angus', 'Hereford', 'Charolais', 'Simmental', 'Brahman', // Beef
     'Other'
   ];
+  final TextEditingController _birthDateController = TextEditingController();
   int? _selectedPenId;
   List<Pen> _pens = [];
 
@@ -43,6 +44,10 @@ class _AnimalFormState extends State<AnimalForm> {
       _selectedPenId = widget.animal!.penId;
       _acquisitionType = widget.animal!.acquisitionType ?? 'Born-on-farm';
       _costController.text = widget.animal!.acquisitionCost?.toString() ?? '';
+      _birthDateController.text = widget.animal!.birthDate ?? '';
+    } else {
+      // Default birth date to today for new animals
+      _birthDateController.text = DateTime.now().toIso8601String().split('T')[0];
     }
     _loadPens();
   }
@@ -97,6 +102,7 @@ class _AnimalFormState extends State<AnimalForm> {
         animalType: _animalType,
         breed: _selectedBreed,
         sex: _gender,
+        birthDate: _birthDateController.text,
         acquisitionType: _acquisitionType,
         acquisitionCost: double.tryParse(_costController.text) ?? 0.0,
       );
@@ -272,6 +278,23 @@ class _AnimalFormState extends State<AnimalForm> {
                 controller: _costController,
                 decoration: const InputDecoration(labelText: 'Acquisition Cost'),
                 keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _birthDateController,
+                decoration: const InputDecoration(labelText: 'Birth Date', prefixIcon: Icon(Icons.cake)),
+                readOnly: true,
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() => _birthDateController.text = picked.toIso8601String().split('T')[0]);
+                  }
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(

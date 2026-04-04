@@ -29,6 +29,7 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
   List<dynamic> _sickAnimals = [];
   List<dynamic> _pregnantAnimals = [];
   List<dynamic> _dueSoonAnimals = [];
+  List<dynamic> _pendingBreeding = [];
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
         ApiService.getSickAnimals(farmerId),
         ApiService.getPregnantAnimals(farmerId),
         ApiService.getDueSoonAnimals(farmerId),
+        ApiService.getPendingBreeding(farmerId),
       ]);
 
       setState(() {
@@ -68,6 +70,7 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
         _sickAnimals = results[10] as List<dynamic>;
         _pregnantAnimals = results[11] as List<dynamic>;
         _dueSoonAnimals = results[12] as List<dynamic>;
+        _pendingBreeding = results[13] as List<dynamic>;
         _isLoading = false;
       });
     } catch (e) {
@@ -347,11 +350,42 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(a['name'] ?? a['tag_number'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text(a['condition'] ?? a['expected_calving_date'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(a['condition'] ?? a['expected_calving_date'] ?? a['breeding_date'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ),
-          if (status == 'Sick' && a['record_id'] != null)
+          if (status == 'Pending' && a['breeding_id'] != null)
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () async {
+                    try {
+                      await ApiService.markBreedingPregnant(a['breeding_id']);
+                      _fetchData();
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marked Pregnant')));
+                    } catch (e) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                    }
+                  },
+                  icon: const Icon(Icons.check_circle, color: Colors.purple, size: 24),
+                  tooltip: 'Pregnant',
+                ),
+                IconButton(
+                  onPressed: () async {
+                    try {
+                      await ApiService.markBreedingFailed(a['breeding_id']);
+                      _fetchData();
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marked Failed')));
+                    } catch (e) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                    }
+                  },
+                  icon: const Icon(Icons.cancel, color: Colors.red, size: 24),
+                  tooltip: 'Failed',
+                ),
+              ],
+            )
+          else if (status == 'Sick' && a['record_id'] != null)
             TextButton.icon(
               onPressed: () async {
                 try {
@@ -460,6 +494,12 @@ class _OperationsDashboardScreenState extends State<OperationsDashboardScreen> {
           const Text('Due Soon', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue)),
           const SizedBox(height: 8),
           ..._dueSoonAnimals.map((a) => _buildActionableAnimalRow(a, 'Due Soon')),
+        ],
+        if (_pendingBreeding.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Breeding Tasks (Check Pregnancy)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.purple)),
+          const SizedBox(height: 8),
+          ..._pendingBreeding.map((a) => _buildActionableAnimalRow(a, 'Pending')),
         ],
       ],
       Icons.pregnant_woman,

@@ -56,18 +56,85 @@ class _BreedingHistoryScreenState extends State<BreedingHistoryScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Method: ${record.breedingMethod}'),
-                            Text('Status: ${record.pregnancyStatus}'),
-                            if (record.outcome != null) Text('Outcome: ${record.outcome}'),
+                            Text('Method: ${record.breedingMethod}', style: const TextStyle(fontSize: 12)),
+                            Row(
+                              children: [
+                                const Text('Status: ', style: TextStyle(fontSize: 12)),
+                                Text(
+                                  record.pregnancyStatus,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: record.pregnancyStatus == 'Pregnant' ? Colors.purple : 
+                                           record.pregnancyStatus == 'Failed' ? Colors.red : 
+                                           record.pregnancyStatus == 'Calved' ? Colors.green : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (record.expectedCalvingDate != null) Text('Due: ${record.expectedCalvingDate}', style: const TextStyle(fontSize: 11, color: Colors.blue)),
+                            if (record.outcome != null) Text('Outcome: ${record.outcome}', style: const TextStyle(fontSize: 12)),
+                            const SizedBox(height: 8),
+                            if (record.pregnancyStatus == 'Unknown')
+                              Row(
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      await ApiService.markBreedingPregnant(record.breedingId);
+                                      _loadRecords();
+                                    },
+                                    icon: const Icon(Icons.check_circle, size: 14),
+                                    label: const Text('Pregnant', style: TextStyle(fontSize: 11)),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: () async {
+                                      await ApiService.markBreedingFailed(record.breedingId);
+                                      _loadRecords();
+                                    },
+                                    icon: const Icon(Icons.cancel, size: 14),
+                                    label: const Text('Failed', style: TextStyle(fontSize: 11)),
+                                    style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                                  ),
+                                ],
+                              )
+                            else if (record.pregnancyStatus == 'Pregnant')
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  await ApiService.markBreedingCalved(record.breedingId);
+                                  _loadRecords();
+                                },
+                                icon: const Icon(Icons.child_care, size: 14),
+                                label: const Text('Mark Calved', style: TextStyle(fontSize: 11)),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                              ),
+                            
+                            if (record.pregnancyStatus == 'Calved')
+                               Padding(
+                                 padding: const EdgeInsets.only(top: 8.0),
+                                 child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AnimalForm(farmerId: ApiService.farmerId),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.add_circle, size: 14),
+                                  label: const Text('Register Offspring', style: TextStyle(fontSize: 11)),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                                 ),
+                               ),
                           ],
                         ),
-                        trailing: const Icon(Icons.edit),
                         onTap: () async {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => BreedingRecordForm(
-                                farmerId: 1, // Defaulting for demo
+                                farmerId: ApiService.farmerId,
                                 existingRecord: record,
                               ),
                             ),
@@ -83,7 +150,7 @@ class _BreedingHistoryScreenState extends State<BreedingHistoryScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BreedingRecordForm(farmerId: 1),
+              builder: (context) => BreedingRecordForm(farmerId: ApiService.farmerId, femaleInitialId: widget.animal.id),
             ),
           );
           _loadRecords();

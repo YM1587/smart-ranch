@@ -225,6 +225,62 @@ async def get_pregnant_animals(
         } for a, br in result.all()
     ]
 
+@router.get("/breeding/pending")
+async def get_pending_breeding(
+    farmer_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: models.Farmer = Depends(get_current_user)
+):
+    if current_user.farmer_id != farmer_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    query = select(models.Animal, models.BreedingRecord).join(
+        models.BreedingRecord, models.Animal.animal_id == models.BreedingRecord.female_id
+    ).where(
+        and_(
+            models.Animal.farmer_id == current_user.farmer_id,
+            models.BreedingRecord.pregnancy_status == "Unknown",
+            models.BreedingRecord.actual_calving_date == None
+        )
+    )
+    result = await db.execute(query)
+    
+    return [
+        {
+            "animal_id": a.animal_id,
+            "tag_number": a.tag_number,
+            "name": a.name,
+            "breeding_id": br.breeding_id,
+            "breeding_date": br.breeding_date,
+            "breeding_method": br.breeding_method
+        } for a, br in result.all()
+    ]
+
+@router.post("/breeding/{breeding_id}/failed")
+async def mark_breeding_failed(
+    breeding_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: models.Farmer = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(models.BreedingRecord)
+        .join(models.Animal, models.BreedingRecord.female_id == models.Animal.animal_id)
+        .where(
+            and_(
+                models.BreedingRecord.breeding_id == breeding_id,
+                models.Animal.farmer_id == current_user.farmer_id
+            )
+        )
+    )
+    record = result.scalars().first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Breeding record not found")
+    
+    record.pregnancy_status = "Failed"
+    await db.commit()
+    await db.refresh(record)
+    return {"status": "success"}
+
 @router.get("/breeding/due-soon")
 async def get_due_soon_animals(
     farmer_id: int, 

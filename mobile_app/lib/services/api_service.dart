@@ -18,7 +18,7 @@ class ApiService {
     _farmerId = null;
   }
 
-  static int? get farmerId => _farmerId;
+  static int get farmerId => _farmerId ?? 1; // Fallback to 1 only if absolutely necessary, but preferred from session
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
@@ -113,6 +113,17 @@ class ApiService {
 
   static Future<void> createWeightRecord(WeightRecord record) async {
     await _post('production/weight', record.toJson());
+  }
+
+  static Future<List<dynamic>> getPendingBreeding(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/breeding/pending?farmer_id=$farmerId'), headers: _headers);
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    return [];
+  }
+
+  static Future<void> markBreedingFailed(int breedingId) async {
+    final response = await http.post(Uri.parse('$baseUrl/production/breeding/$breedingId/failed'), headers: _headers);
+    if (response.statusCode != 200) throw Exception('Failed to mark breeding as failed');
   }
 
   static Future<void> createBreedingRecord(BreedingRecord record) async {
