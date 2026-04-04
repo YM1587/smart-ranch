@@ -28,7 +28,7 @@ class ApiService {
   // Use 10.0.2.2 for Android emulator to access localhost of the host machine.
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:8000';
+      return 'http://localhost:8000';
     }
     return 'http://10.0.2.2:8000';
   }

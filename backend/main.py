@@ -10,7 +10,7 @@ app = FastAPI(title="Smart Ranch Management System API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False, # Changed to False to allow "*" wildcard for development
     allow_methods=["*"],
     allow_headers=["*"],
 )
