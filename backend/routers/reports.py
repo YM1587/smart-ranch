@@ -108,7 +108,10 @@ async def get_financial_summary(
     if current_user.farmer_id != farmer_id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    query = select(
+    summary = {}
+
+    # 1. Existing Expense Transactions from FinancialTransaction table
+    finance_query = select(
         models.FinancialTransaction.category,
         func.sum(models.FinancialTransaction.amount).label("total_amount")
     ).where(
@@ -118,10 +121,43 @@ async def get_financial_summary(
         )
     ).group_by(models.FinancialTransaction.category)
     
-    result = await db.execute(query)
-    rows = result.all()
-    
-    summary = {row.category: float(row.total_amount) for row in rows}
+    finance_res = await db.execute(finance_query)
+    for row in finance_res.all():
+        summary[row.category] = float(row.total_amount)
+
+    # 2. Feed Costs (Pen FeedLogs)
+    # Join with AnimalPen to filter by farmer_id
+    feed_query = select(func.sum(models.FeedLog.total_cost)).join(models.AnimalPen).where(models.AnimalPen.farmer_id == farmer_id)
+    feed_res = await db.execute(feed_query)
+    feed_total = feed_res.scalar() or 0
+    summary["Feeding"] = summary.get("Feeding", 0) + float(feed_total)
+
+    # 3. Labor Costs
+    labor_query = select(func.sum(models.LaborActivity.labor_cost)).where(models.LaborActivity.farmer_id == farmer_id)
+    labor_res = await db.execute(labor_query)
+    labor_total = labor_res.scalar() or 0
+    summary["Labor"] = summary.get("Labor", 0) + float(labor_total)
+
+    # 4. Health/Medical Costs
+    # Join with Animal to filter by farmer_id
+    health_query = select(func.sum(models.HealthRecord.cost)).join(models.Animal).where(models.Animal.farmer_id == farmer_id)
+    health_res = await db.execute(health_query)
+    health_total = health_res.scalar() or 0
+    summary["Medical"] = summary.get("Medical", 0) + float(health_total)
+
+    # 5. Breeding Costs
+    # Join with Animal to filter by farmer_id (using female animal)
+    breeding_query = select(func.sum(models.BreedingRecord.cost)).join(models.Animal, models.BreedingRecord.female_id == models.Animal.animal_id).where(models.Animal.farmer_id == farmer_id)
+    breeding_res = await db.execute(breeding_query)
+    breeding_total = breeding_res.scalar() or 0
+    summary["Breeding"] = summary.get("Breeding", 0) + float(breeding_total)
+
+    # 6. Animal Acquisition Costs
+    acquisition_query = select(func.sum(models.Animal.acquisition_cost)).where(models.Animal.farmer_id == farmer_id)
+    acquisition_res = await db.execute(acquisition_query)
+    acquisition_total = acquisition_res.scalar() or 0
+    summary["Acquisition"] = summary.get("Acquisition", 0) + float(acquisition_total)
+
     total_expenses = sum(summary.values())
     
     return {

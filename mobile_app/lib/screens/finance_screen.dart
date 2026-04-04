@@ -21,6 +21,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
   TimeRange _selectedRange = TimeRange.month;
   DateTimeRange? _customRange;
 
+  List<FeedLog> _feedLogs = [];
+  List<LaborActivity> _laborActivities = [];
+  List<HealthEvent> _healthEvents = [];
+  List<BreedingRecord> _breedingRecords = [];
+  List<Animal> _animals = [];
+
   @override
   void initState() {
     super.initState();
@@ -30,9 +36,61 @@ class _FinanceScreenState extends State<FinanceScreen> {
   Future<void> _loadTransactions() async {
     try {
       final farmerId = ApiService.farmerId ?? 1;
-      final data = await ApiService.getFinancialTransactions(farmerId);
+      final results = await Future.wait([
+        ApiService.getFinancialTransactions(farmerId),
+        ApiService.getPenFeedLogs(farmerId),
+        ApiService.getAllLaborActivities(farmerId),
+        ApiService.getAllHealthEvents(farmerId),
+        ApiService.getAllBreedingRecords(farmerId),
+        ApiService.getAnimals(),
+      ]);
+
+      final txs = results[0] as List<FinancialTransaction>;
+      final feeds = results[1] as List<FeedLog>;
+      final labors = results[2] as List<LaborActivity>;
+      final healths = results[3] as List<HealthEvent>;
+      final breedings = results[4] as List<BreedingRecord>;
+      final animals = results[5] as List<Animal>;
+
+      List<FinancialTransaction> combined = List.from(txs);
+
+      // Convert other costs to virtual transactions for consistent reporting
+      for (var f in feeds) {
+        combined.add(FinancialTransaction(
+          id: -1, farmerId: farmerId, type: 'Expense', category: 'Feeding',
+          amount: f.cost, date: f.date, description: 'Feed: ${f.feedType}'
+        ));
+      }
+      for (var l in labors) {
+        combined.add(FinancialTransaction(
+          id: -1, farmerId: farmerId, type: 'Expense', category: 'Labor',
+          amount: l.laborCost, date: l.date, description: 'Labor: ${l.activityType}'
+        ));
+      }
+      for (var h in healths) {
+        combined.add(FinancialTransaction(
+          id: -1, farmerId: farmerId, type: 'Expense', category: 'Medical',
+          amount: h.cost, date: h.date, description: 'Health: ${h.condition}'
+        ));
+      }
+      for (var b in breedings) {
+        combined.add(FinancialTransaction(
+          id: -1, farmerId: farmerId, type: 'Expense', category: 'Breeding',
+          amount: b.cost, date: b.breedingDate, description: 'Breeding'
+        ));
+      }
+      for (var a in animals) {
+        if (a.acquisitionCost > 0) {
+          combined.add(FinancialTransaction(
+            id: -1, farmerId: farmerId, type: 'Expense', category: 'Acquisition',
+            amount: a.acquisitionCost, date: a.birthDate ?? DateTime.now().toIso8601String().split('T')[0], 
+            description: 'Acquisition: ${a.tagNumber}'
+          ));
+        }
+      }
+
       setState(() {
-        _allTransactions = data;
+        _allTransactions = combined;
         _filterTransactions();
         _isLoading = false;
       });

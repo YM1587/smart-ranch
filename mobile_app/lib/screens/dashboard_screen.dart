@@ -224,7 +224,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final monthlyExpenses = _transactions.where((t) {
       final date = DateTime.tryParse(t.date);
       return t.type == 'Expense' && date != null && date.month == thisMonth && date.year == thisYear;
-    }).fold(0.0, (sum, t) => sum + t.amount);
+    }).fold(0.0, (sum, t) => sum + t.amount) + 
+    _penFeedLogs.where((l) {
+      final date = DateTime.tryParse(l.date);
+      return date != null && date.month == thisMonth && date.year == thisYear;
+    }).fold(0.0, (sum, l) => sum + l.cost) +
+    _laborActivities.where((l) {
+      final date = DateTime.tryParse(l.date);
+      return date != null && date.month == thisMonth && date.year == thisYear;
+    }).fold(0.0, (sum, l) => sum + l.laborCost) +
+    _healthEvents.where((e) {
+      final date = DateTime.tryParse(e.date);
+      return date != null && date.month == thisMonth && date.year == thisYear;
+    }).fold(0.0, (sum, e) => sum + e.cost) +
+    _breedingRecords.where((b) {
+      final date = DateTime.tryParse(b.breedingDate);
+      return date != null && date.month == thisMonth && date.year == thisYear;
+    }).fold(0.0, (sum, b) => sum + b.cost);
 
     final lastMonthIncome = _transactions.where((t) {
       final date = DateTime.tryParse(t.date);
@@ -234,7 +250,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final lastMonthExpenses = _transactions.where((t) {
       final date = DateTime.tryParse(t.date);
       return t.type == 'Expense' && date != null && date.month == lastMonth && date.year == lastMonthYear;
-    }).fold(0.0, (sum, t) => sum + t.amount);
+    }).fold(0.0, (sum, t) => sum + t.amount) +
+    _penFeedLogs.where((l) {
+      final date = DateTime.tryParse(l.date);
+      return date != null && date.month == lastMonth && date.year == lastMonthYear;
+    }).fold(0.0, (sum, l) => sum + l.cost) +
+    _laborActivities.where((l) {
+      final date = DateTime.tryParse(l.date);
+      return date != null && date.month == lastMonth && date.year == lastMonthYear;
+    }).fold(0.0, (sum, l) => sum + l.laborCost) +
+    _healthEvents.where((e) {
+      final date = DateTime.tryParse(e.date);
+      return date != null && date.month == lastMonth && date.year == lastMonthYear;
+    }).fold(0.0, (sum, e) => sum + e.cost) +
+    _breedingRecords.where((b) {
+      final date = DateTime.tryParse(b.breedingDate);
+      return date != null && date.month == lastMonth && date.year == lastMonthYear;
+    }).fold(0.0, (sum, b) => sum + b.cost);
 
     final netProfit = monthlyIncome - monthlyExpenses;
     final lastNetProfit = lastMonthIncome - lastMonthExpenses;
