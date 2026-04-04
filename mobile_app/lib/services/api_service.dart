@@ -99,24 +99,24 @@ class ApiService {
     return {"categories": {}, "total_expenses": 0};
   }
 
-  static Future<void> createAnimal(Map<String, dynamic> data) async {
-    await _post('animals', data);
+  static Future<void> createAnimal(Animal animal) async {
+    await _post('animals', animal.toJson());
   }
 
   static Future<void> updateAnimal(int id, Map<String, dynamic> data) async {
     await _put('animals/$id', data);
   }
 
-  static Future<void> createMilkProduction(Map<String, dynamic> data) async {
-    await _post('production/milk', data);
+  static Future<void> createMilkProduction(MilkProduction production) async {
+    await _post('production/milk', production.toJson());
   }
 
-  static Future<void> createWeightRecord(Map<String, dynamic> data) async {
-    await _post('production/weight', data);
+  static Future<void> createWeightRecord(WeightRecord record) async {
+    await _post('production/weight', record.toJson());
   }
 
-  static Future<void> createBreedingRecord(Map<String, dynamic> data) async {
-    await _post('production/breeding', data);
+  static Future<void> createBreedingRecord(BreedingRecord record) async {
+    await _post('production/breeding', record.toJson());
   }
 
   static Future<void> updateBreedingRecord(int id, Map<String, dynamic> data) async {
@@ -133,16 +133,16 @@ class ApiService {
     }
   }
 
-  static Future<void> createFeedLog(Map<String, dynamic> data) async {
-    await _post('feed/pen', data);
+  static Future<void> createFeedLog(FeedLog log) async {
+    await _post('feed/pen', log.toJson());
   }
 
-  static Future<void> createHealthRecord(Map<String, dynamic> data) async {
-    await _post('health', data);
+  static Future<void> createHealthRecord(HealthEvent event) async {
+    await _post('health', event.toJson());
   }
 
-  static Future<void> createLaborActivity(Map<String, dynamic> data) async {
-    await _post('labor', data);
+  static Future<void> createLaborActivity(LaborActivity activity) async {
+    await _post('labor', activity.toJson());
   }
 
 
@@ -351,4 +351,39 @@ class ApiService {
     }
   }
 
+  static Future<List<dynamic>> getDueSoonAnimals(int farmerId) async {
+    final response = await http.get(Uri.parse('$baseUrl/production/breeding/due-soon?farmer_id=$farmerId'), headers: _headers);
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    return [];
+  }
+
+  static Future<void> resolveHealthRecord(int recordId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/health/$recordId/resolve'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to resolve health record: ${response.body}');
+    }
+  }
+
+  static Future<void> markBreedingPregnant(int breedingId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/production/breeding/$breedingId/pregnant'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark breeding as pregnant: ${response.body}');
+    }
+  }
+
+  static Future<void> markBreedingCalved(int breedingId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/production/breeding/$breedingId/calved'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark breeding as calved: ${response.body}');
+    }
+  }
 }

@@ -88,26 +88,27 @@ class _AnimalFormState extends State<AnimalForm> {
         return;
       }
 
-      final data = {
-        'farmer_id': widget.farmerId,
-        'pen_id': _selectedPenId,
-        'tag_number': _tagController.text,
-        'name': _nameController.text,
-        'animal_type': _animalType,
-        'breed': _selectedBreed,
-        'gender': _gender,
-        'acquisition_type': _acquisitionType,
-        'acquisition_cost': double.tryParse(_costController.text) ?? 0.0,
-      };
+      final animal = Animal(
+        id: widget.animal?.id ?? 0,
+        farmerId: widget.farmerId,
+        tagNumber: _tagController.text,
+        name: _nameController.text,
+        penId: _selectedPenId,
+        animalType: _animalType,
+        breed: _selectedBreed,
+        sex: _gender,
+        acquisitionType: _acquisitionType,
+        acquisitionCost: double.tryParse(_costController.text) ?? 0.0,
+      );
 
       try {
         if (widget.animal != null) {
-          await ApiService.updateAnimal(widget.animal!.id, data);
+          await ApiService.updateAnimal(widget.animal!.id, animal.toJson());
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Animal updated successfully!')),
           );
         } else {
-          await ApiService.createAnimal(data);
+          await ApiService.createAnimal(animal);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Animal added successfully!')),
           );

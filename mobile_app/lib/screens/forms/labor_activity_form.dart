@@ -28,17 +28,18 @@ class _LaborActivityFormState extends State<LaborActivityForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'farmer_id': widget.farmerId,
-        'activity_type': _activityType,
-        'description': _descriptionController.text,
-        'hours_spent': double.tryParse(_hoursController.text) ?? 0.0,
-        'labor_cost': double.tryParse(_costController.text) ?? 0.0,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-      };
+      final activity = LaborActivity(
+        id: 0,
+        farmerId: widget.farmerId,
+        activityType: _activityType,
+        description: _descriptionController.text,
+        hoursSpent: double.tryParse(_hoursController.text) ?? 0.0,
+        laborCost: double.tryParse(_costController.text) ?? 0.0,
+        date: DateTime.now().toIso8601String().split('T')[0],
+      );
 
       try {
-        await ApiService.createLaborActivity(data);
+        await ApiService.createLaborActivity(activity);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Labor activity added successfully!')),
         );

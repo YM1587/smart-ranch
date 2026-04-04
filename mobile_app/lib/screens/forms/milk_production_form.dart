@@ -52,15 +52,17 @@ class _MilkProductionFormState extends State<MilkProductionForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'animal_id': _selectedAnimalId,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-        'morning_yield': double.tryParse(_morningYieldController.text) ?? 0.0,
-        'evening_yield': double.tryParse(_eveningYieldController.text) ?? 0.0,
-      };
+      final production = MilkProduction(
+        id: 0,
+        animalId: _selectedAnimalId!,
+        date: DateTime.now().toIso8601String().split('T')[0],
+        morningYield: double.tryParse(_morningYieldController.text) ?? 0.0,
+        eveningYield: double.tryParse(_eveningYieldController.text) ?? 0.0,
+        totalYield: (double.tryParse(_morningYieldController.text) ?? 0.0) + (double.tryParse(_eveningYieldController.text) ?? 0.0),
+      );
 
       try {
-        await ApiService.createMilkProduction(data);
+        await ApiService.createMilkProduction(production);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Milk record added successfully!')),
         );

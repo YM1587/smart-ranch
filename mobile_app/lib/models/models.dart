@@ -1,24 +1,29 @@
+import 'dart:convert';
+
 class Pen {
   final int id;
+  final int farmerId;
   final String name;
   final String livestockType;
   final int? capacity;
 
-  Pen({required this.id, required this.name, required this.livestockType, this.capacity});
+  Pen({required this.id, required this.farmerId, required this.name, required this.livestockType, this.capacity});
 
   factory Pen.fromJson(Map<String, dynamic> json) {
     return Pen(
       id: int.tryParse(json['pen_id'].toString()) ?? 0,
-      name: json['pen_name'],
-      livestockType: json['pen_type'],
+      farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
+      name: json['pen_name'] ?? '',
+      livestockType: json['pen_type'] ?? '',
       capacity: json['capacity'] != null ? int.tryParse(json['capacity'].toString()) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'livestock_type': livestockType,
+      'farmer_id': farmerId,
+      'pen_name': name,
+      'pen_type': livestockType,
       'capacity': capacity,
     };
   }
@@ -26,74 +31,71 @@ class Pen {
 
 class Animal {
   final int id;
+  final int farmerId;
   final String tagNumber;
   final String? name;
   final int? penId;
   final String? breed;
   final String? sex;
-  final String status; // Changed to non-nullable
+  final String status;
   final String? animalType;
   final String? birthDate;
-  final String acquisitionType; // Changed to non-nullable
-  final double acquisitionCost; // Changed to non-nullable
+  final String acquisitionType;
+  final double acquisitionCost;
   final String? disposalReason;
-  final DateTime? disposalDate; // Added
-  final double? disposalValue; // Added
-  final String? notes; // Added
+  final String? notes;
 
   Animal({
     required this.id,
+    required this.farmerId,
     required this.tagNumber,
     this.name,
     this.penId,
     this.breed,
     this.sex,
-    this.status = 'Active', // Default value added
+    this.status = 'Active',
     this.animalType,
     this.birthDate,
-    required this.acquisitionType, // Changed to required
-    this.acquisitionCost = 0.0, // Default value added
+    required this.acquisitionType,
+    this.acquisitionCost = 0.0,
     this.disposalReason,
-    this.disposalDate, // Added
-    this.disposalValue, // Added
-    this.notes, // Added
+    this.notes,
   });
 
   factory Animal.fromJson(Map<String, dynamic> json) {
     return Animal(
       id: int.tryParse(json['animal_id'].toString()) ?? 0,
-      tagNumber: json['tag_number'],
+      farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
+      tagNumber: json['tag_number'] ?? '',
       name: json['name'],
       penId: json['pen_id'] != null ? int.tryParse(json['pen_id'].toString()) : null,
       breed: json['breed'],
       sex: json['gender'],
-      status: json['status'] ?? 'Active', // Handle null status from JSON
+      status: json['status'] ?? 'Active',
       animalType: json['animal_type'],
       birthDate: json['birth_date'],
-      acquisitionType: json['acquisition_type'] ?? '', // Handle null acquisition_type from JSON
-      acquisitionCost: json['acquisition_cost'] != null 
-          ? double.tryParse(json['acquisition_cost'].toString()) ?? 0.0
-          : 0.0,
+      acquisitionType: json['acquisition_type'] ?? '',
+      acquisitionCost: double.tryParse(json['acquisition_cost'].toString()) ?? 0.0,
       disposalReason: json['disposal_reason'],
-      disposalDate: json['disposal_date'] != null ? DateTime.tryParse(json['disposal_date']) : null, // Added
-      disposalValue: json['disposal_value'] != null ? double.tryParse(json['disposal_value'].toString()) : null, // Added
-      notes: json['notes'], // Added
+      notes: json['notes'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'farmer_id': farmerId,
       'tag_number': tagNumber,
       'name': name,
       'pen_id': penId,
       'breed': breed,
-      'gender': sex, // Use gender for backend
+      'gender': sex,
       'status': status,
       'animal_type': animalType,
       'birth_date': birthDate,
       'acquisition_type': acquisitionType,
       'acquisition_cost': acquisitionCost,
       'disposal_reason': disposalReason,
+      'notes': notes,
     };
   }
 }
@@ -101,46 +103,58 @@ class Animal {
 class HealthEvent {
   final int id;
   final int animalId;
-  final String eventDate;
-  final String eventType;
-  final String? diagnosis;
-  final String? treatment;
-  final double? cost;
+  final String date;
+  final String condition;
+  final String symptoms;
+  final String treatment;
+  final String? outcome;
+  final double cost;
+  final String? vetName;
   final String? nextCheckupDate;
+  final String? notes;
 
   HealthEvent({
     required this.id,
     required this.animalId,
-    required this.eventDate,
-    required this.eventType,
-    this.diagnosis,
-    this.treatment,
-    this.cost,
+    required this.date,
+    required this.condition,
+    required this.symptoms,
+    required this.treatment,
+    this.outcome,
+    this.cost = 0.0,
+    this.vetName,
     this.nextCheckupDate,
+    this.notes,
   });
 
   factory HealthEvent.fromJson(Map<String, dynamic> json) {
     return HealthEvent(
       id: int.tryParse(json['record_id'].toString()) ?? 0,
       animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
-      eventDate: json['date'],
-      eventType: json['condition'],
-      diagnosis: json['symptoms'],
-      treatment: json['treatment'],
-      cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) ?? 0.0 : 0.0,
+      date: json['date'] ?? '',
+      condition: json['condition'] ?? '',
+      symptoms: json['symptoms'] ?? '',
+      treatment: json['treatment'] ?? '',
+      outcome: json['outcome'],
+      cost: double.tryParse(json['cost'].toString()) ?? 0.0,
+      vetName: json['vet_name'],
       nextCheckupDate: json['next_checkup_date'],
+      notes: json['notes'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'animal_id': animalId,
-      'event_date': eventDate,
-      'event_type': eventType,
-      'diagnosis': diagnosis,
+      'date': date,
+      'condition': condition,
+      'symptoms': symptoms,
       'treatment': treatment,
+      'outcome': outcome,
       'cost': cost,
+      'vet_name': vetName,
       'next_checkup_date': nextCheckupDate,
+      'notes': notes,
     };
   }
 }
@@ -148,7 +162,7 @@ class HealthEvent {
 class FeedLog {
   final int id;
   final int penId;
-  final String logDate;
+  final String date;
   final String feedType;
   final double quantityKg;
   final double cost;
@@ -156,7 +170,7 @@ class FeedLog {
   FeedLog({
     required this.id,
     required this.penId,
-    required this.logDate,
+    required this.date,
     required this.feedType,
     required this.quantityKg,
     required this.cost,
@@ -166,72 +180,180 @@ class FeedLog {
     return FeedLog(
       id: int.tryParse(json['log_id'].toString()) ?? 0,
       penId: int.tryParse(json['pen_id'].toString()) ?? 0,
-      logDate: json['date'],
-      feedType: json['feed_type'],
+      date: json['date'] ?? '',
+      feedType: json['feed_type'] ?? '',
       quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
-      cost: double.tryParse(json['total_cost'].toString()) ?? 0.0,
+      cost: double.tryParse(json['cost_per_kg'].toString()) ?? 0.0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'pen_id': penId,
-      'log_date': logDate,
+      'date': date,
       'feed_type': feedType,
       'quantity_kg': quantityKg,
-      'cost': cost,
+      'cost_per_kg': cost,
     };
   }
 }
 
-class FinancialTransaction {
+class IndividualFeedLog {
   final int id;
-  final String type; // 'Income' or 'Expense'
-  final String category;
-  final double amount;
+  final int animalId;
+  final String feedType;
+  final double quantityKg;
+  final double cost;
   final String date;
-  final String? description;
-  final int? relatedAnimalId;
-  final int? relatedPenId;
-  final String? buyerSupplier;
-  final String? sourceTable;
-  final int? sourceId;
+
+  IndividualFeedLog({
+    required this.id,
+    required this.animalId,
+    required this.feedType,
+    required this.quantityKg,
+    required this.cost,
+    required this.date,
+  });
+
+  factory IndividualFeedLog.fromJson(Map<String, dynamic> json) {
+    return IndividualFeedLog(
+      id: int.tryParse(json['individual_feed_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
+      feedType: json['feed_type'] ?? '',
+      quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
+      cost: double.tryParse(json['cost_per_kg'].toString()) ?? 0.0,
+      date: json['date'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'animal_id': animalId,
+      'feed_type': feedType,
+      'quantity_kg': quantityKg,
+      'cost_per_kg': cost,
+      'date': date,
+    };
+  }
+}
+
+class MilkProduction {
+  final int id;
+  final int animalId;
+  final String date;
+  final double morningYield;
+  final double eveningYield;
+  final double totalYield;
+
+  MilkProduction({
+    required this.id,
+    required this.animalId,
+    required this.date,
+    required this.morningYield,
+    required this.eveningYield,
+    required this.totalYield,
+  });
+
+  factory MilkProduction.fromJson(Map<String, dynamic> json) {
+    return MilkProduction(
+      id: int.tryParse(json['production_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
+      date: json['date'] ?? '',
+      morningYield: double.tryParse(json['morning_yield'].toString()) ?? 0.0,
+      eveningYield: double.tryParse(json['evening_yield'].toString()) ?? 0.0,
+      totalYield: double.tryParse(json['total_yield'].toString()) ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'animal_id': animalId,
+      'date': date,
+      'morning_yield': morningYield,
+      'evening_yield': eveningYield,
+    };
+  }
+}
+
+class WeightRecord {
+  final int id;
+  final int animalId;
+  final String date;
+  final double weightKg;
+  final int? bodyConditionScore;
   final String? notes;
 
-  FinancialTransaction({
+  WeightRecord({
     required this.id,
-    required this.type,
-    required this.category,
-    required this.amount,
+    required this.animalId,
     required this.date,
-    this.description,
-    this.relatedAnimalId,
-    this.relatedPenId,
-    this.buyerSupplier,
-    this.sourceTable,
-    this.sourceId,
+    required this.weightKg,
+    this.bodyConditionScore,
     this.notes,
   });
 
-  factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
-    return FinancialTransaction(
-      id: int.tryParse(json['transaction_id'].toString()) ?? 0,
-      type: json['type'] ?? '',
-      category: json['category'] ?? '',
-      amount: double.tryParse(json['amount'].toString()) ?? 0.0,
+  factory WeightRecord.fromJson(Map<String, dynamic> json) {
+    return WeightRecord(
+      id: int.tryParse(json['weight_id'].toString()) ?? 0,
+      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
       date: json['date'] ?? '',
-      description: json['description'],
-      relatedAnimalId: json['related_animal_id'] != null ? int.tryParse(json['related_animal_id'].toString()) : null,
-      relatedPenId: json['related_pen_id'] != null ? int.tryParse(json['related_pen_id'].toString()) : null,
-      buyerSupplier: json['buyer_supplier'],
-      sourceTable: json['source_table'],
-      sourceId: json['source_id'] != null ? int.tryParse(json['source_id'].toString()) : null,
+      weightKg: double.tryParse(json['weight_kg'].toString()) ?? 0.0,
+      bodyConditionScore: json['body_condition_score'] != null ? int.tryParse(json['body_condition_score'].toString()) : null,
       notes: json['notes'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'animal_id': animalId,
+      'date': date,
+      'weight_kg': weightKg,
+      'body_condition_score': bodyConditionScore,
+      'notes': notes,
+    };
+  }
+}
+
+class FinancialTransaction {
+  final int id;
+  final int farmerId;
+  final String type;
+  final String category;
+  final double amount;
+  final String date;
+  final String description;
+  final int? relatedAnimalId;
+  final int? relatedPenId;
+
+  FinancialTransaction({
+    required this.id,
+    required this.farmerId,
+    required this.type,
+    required this.category,
+    required this.amount,
+    required this.date,
+    required this.description,
+    this.relatedAnimalId,
+    this.relatedPenId,
+  });
+
+  factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
+    return FinancialTransaction(
+      id: int.tryParse(json['transaction_id'].toString()) ?? 0,
+      farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
+      type: json['type'] ?? '',
+      category: json['category'] ?? '',
+      amount: double.tryParse(json['amount'].toString()) ?? 0.0,
+      date: json['date'] ?? '',
+      description: json['description'] ?? '',
+      relatedAnimalId: json['related_animal_id'],
+      relatedPenId: json['related_pen_id'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'farmer_id': farmerId,
       'type': type,
       'category': category,
       'amount': amount,
@@ -239,13 +361,10 @@ class FinancialTransaction {
       'description': description,
       'related_animal_id': relatedAnimalId,
       'related_pen_id': relatedPenId,
-      'buyer_supplier': buyerSupplier,
-      'source_table': sourceTable,
-      'source_id': sourceId,
-      'notes': notes,
     };
   }
 }
+
 class BreedingRecord {
   final int id;
   final int femaleId;
@@ -313,155 +432,76 @@ class LaborActivity {
   final int id;
   final int farmerId;
   final String activityType;
-  final String? description;
   final double hoursSpent;
   final double laborCost;
   final String date;
-  final int? relatedAnimalId;
-  final int? relatedPenId;
+  final String? description;
 
   LaborActivity({
     required this.id,
     required this.farmerId,
     required this.activityType,
-    this.description,
     required this.hoursSpent,
     required this.laborCost,
     required this.date,
-    this.relatedAnimalId,
-    this.relatedPenId,
+    this.description,
   });
 
   factory LaborActivity.fromJson(Map<String, dynamic> json) {
     return LaborActivity(
       id: int.tryParse(json['activity_id'].toString()) ?? 0,
       farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
-      activityType: json['activity_type'],
-      description: json['description'],
+      activityType: json['activity_type'] ?? '',
       hoursSpent: double.tryParse(json['hours_spent'].toString()) ?? 0.0,
       laborCost: double.tryParse(json['labor_cost'].toString()) ?? 0.0,
-      date: json['date'],
-      relatedAnimalId: json['related_animal_id'] != null ? int.tryParse(json['related_animal_id'].toString()) : null,
-      relatedPenId: json['related_pen_id'] != null ? int.tryParse(json['related_pen_id'].toString()) : null,
+      date: json['date'] ?? '',
+      description: json['description'],
     );
   }
-}
 
-class MilkProduction {
-  final int id;
-  final int animalId;
-  final String date;
-  final double? morningYield;
-  final double? eveningYield;
-  final double totalYield;
-
-  MilkProduction({
-    required this.id,
-    required this.animalId,
-    required this.date,
-    this.morningYield,
-    this.eveningYield,
-    required this.totalYield,
-  });
-
-  factory MilkProduction.fromJson(Map<String, dynamic> json) {
-    return MilkProduction(
-      id: int.tryParse(json['production_id'].toString()) ?? 0,
-      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
-      date: json['date'],
-      morningYield: json['morning_yield'] != null ? double.tryParse(json['morning_yield'].toString()) : null,
-      eveningYield: json['evening_yield'] != null ? double.tryParse(json['evening_yield'].toString()) : null,
-      totalYield: double.tryParse(json['total_yield'].toString()) ?? 0.0,
-    );
-  }
-}
-
-class WeightRecord {
-  final int id;
-  final int animalId;
-  final String date;
-  final double weightKg;
-  final int? bodyConditionScore;
-
-  WeightRecord({
-    required this.id,
-    required this.animalId,
-    required this.date,
-    required this.weightKg,
-    this.bodyConditionScore,
-  });
-
-  factory WeightRecord.fromJson(Map<String, dynamic> json) {
-    return WeightRecord(
-      id: int.tryParse(json['weight_id'].toString()) ?? 0,
-      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
-      date: json['date'],
-      weightKg: double.tryParse(json['weight_kg'].toString()) ?? 0.0,
-      bodyConditionScore: json['body_condition_score'] != null ? int.tryParse(json['body_condition_score'].toString()) : null,
-    );
-  }
-}
-
-class IndividualFeedLog {
-  final int id;
-  final int animalId;
-  final String feedType;
-  final double quantityKg;
-  final double cost;
-  final String date;
-
-  IndividualFeedLog({
-    required this.id,
-    required this.animalId,
-    required this.feedType,
-    required this.quantityKg,
-    required this.cost,
-    required this.date,
-  });
-
-  factory IndividualFeedLog.fromJson(Map<String, dynamic> json) {
-    return IndividualFeedLog(
-      id: int.tryParse(json['individual_feed_id'].toString()) ?? 0,
-      animalId: int.tryParse(json['animal_id'].toString()) ?? 0,
-      feedType: json['feed_type'],
-      quantityKg: double.tryParse(json['quantity_kg'].toString()) ?? 0.0,
-      cost: double.tryParse(json['total_cost'].toString()) ?? 0.0,
-      date: json['date'],
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'farmer_id': farmerId,
+      'activity_type': activityType,
+      'hours_spent': hoursSpent,
+      'labor_cost': laborCost,
+      'date': date,
+      'description': description,
+    };
   }
 }
 
 class Alert {
   final int id;
   final int farmerId;
+  final String type;
   final String title;
   final String message;
-  final String type;
+  final String severity;
   final int? relatedAnimalId;
-  final DateTime createdAt;
-  final DateTime? dismissedAt;
+  final bool isDismissed;
 
   Alert({
     required this.id,
     required this.farmerId,
+    required this.type,
     required this.title,
     required this.message,
-    required this.type,
+    required this.severity,
     this.relatedAnimalId,
-    required this.createdAt,
-    this.dismissedAt,
+    this.isDismissed = false,
   });
 
   factory Alert.fromJson(Map<String, dynamic> json) {
     return Alert(
-      id: json['id'],
-      farmerId: json['farmer_id'],
-      title: json['title'],
-      message: json['message'],
-      type: json['type'],
-      relatedAnimalId: json['animal_id'],
-      createdAt: DateTime.parse(json['created_at']),
-      dismissedAt: json['dismissed_at'] != null ? DateTime.parse(json['dismissed_at']) : null,
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      farmerId: int.tryParse(json['farmer_id'].toString()) ?? 0,
+      type: json['type'] ?? 'INFO',
+      title: json['title'] ?? '',
+      message: json['message'] ?? '',
+      severity: json['severity'] ?? 'Info',
+      relatedAnimalId: json['related_animal_id'],
+      isDismissed: (json['is_dismissed'] == 1 || json['is_dismissed'] == true),
     );
   }
 }

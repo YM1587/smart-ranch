@@ -112,25 +112,26 @@ class _BreedingRecordFormState extends State<BreedingRecordForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'female_id': _selectedFemaleId,
-        'male_id': _selectedMaleId,
-        'breeding_date': _breedingDate.toIso8601String().split('T')[0],
-        'breeding_method': _breedingMethod,
-        'pregnancy_status': _pregnancyStatus,
-        'expected_calving_date': _expectedCalvingDate?.toIso8601String().split('T')[0],
-        'actual_calving_date': _actualCalvingDate?.toIso8601String().split('T')[0],
-        'outcome': _outcome,
-        'offspring_id': _selectedOffspringId,
-        'cost': double.tryParse(_costController.text) ?? 0.0,
-        'notes': _notesController.text,
-      };
+      final record = BreedingRecord(
+        id: widget.existingRecord?.id ?? 0,
+        femaleId: _selectedFemaleId!,
+        maleId: _selectedMaleId,
+        breedingDate: _breedingDate.toIso8601String().split('T')[0],
+        breedingMethod: _breedingMethod,
+        pregnancyStatus: _pregnancyStatus,
+        expectedCalvingDate: _expectedCalvingDate?.toIso8601String().split('T')[0],
+        actualCalvingDate: _actualCalvingDate?.toIso8601String().split('T')[0],
+        outcome: _outcome,
+        offspringId: _selectedOffspringId,
+        cost: double.tryParse(_costController.text) ?? 0.0,
+        notes: _notesController.text,
+      );
 
       try {
         if (widget.existingRecord != null) {
-          await ApiService.updateBreedingRecord(widget.existingRecord!.id, data);
+          await ApiService.updateBreedingRecord(widget.existingRecord!.id, record.toJson());
         } else {
-          await ApiService.createBreedingRecord(data);
+          await ApiService.createBreedingRecord(record);
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(widget.existingRecord != null ? 'Record updated!' : 'Breeding record added!')),

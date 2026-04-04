@@ -16,6 +16,9 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
   final _symptomsController = TextEditingController();
   final _treatmentController = TextEditingController();
   final _costController = TextEditingController();
+  final _vetNameController = TextEditingController();
+  final _notesController = TextEditingController();
+  String _outcome = 'Under Treatment';
   int? _selectedPenId;
   int? _selectedAnimalId;
   List<Pen> _pens = [];
@@ -66,17 +69,21 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'animal_id': _selectedAnimalId,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-        'condition': _conditionController.text,
-        'symptoms': _symptomsController.text,
-        'treatment': _treatmentController.text,
-        'cost': double.tryParse(_costController.text) ?? 0.0,
-      };
+      final event = HealthEvent(
+        id: 0,
+        animalId: _selectedAnimalId!,
+        date: DateTime.now().toIso8601String().split('T')[0],
+        condition: _conditionController.text,
+        symptoms: _symptomsController.text,
+        treatment: _treatmentController.text,
+        outcome: _outcome,
+        cost: double.tryParse(_costController.text) ?? 0.0,
+        vetName: _vetNameController.text,
+        notes: _notesController.text,
+      );
 
       try {
-        await ApiService.createHealthRecord(data);
+        await ApiService.createHealthRecord(event);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Health record added successfully!')),
         );
@@ -154,6 +161,23 @@ class _HealthRecordFormState extends State<HealthRecordForm> {
                 controller: _costController,
                 decoration: const InputDecoration(labelText: 'Cost'),
                 keyboardType: TextInputType.number,
+              ),
+              TextFormField(
+                controller: _vetNameController,
+                decoration: const InputDecoration(labelText: 'Veterinarian Name'),
+              ),
+              DropdownButtonFormField<String>(
+                value: _outcome,
+                decoration: const InputDecoration(labelText: 'Outcome/Status'),
+                items: ['Under Treatment', 'Recovered', 'Died', 'Culled']
+                    .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+                    .toList(),
+                onChanged: (v) => setState(() => _outcome = v!),
+              ),
+              TextFormField(
+                controller: _notesController,
+                decoration: const InputDecoration(labelText: 'Additional Notes'),
+                maxLines: 2,
               ),
               const SizedBox(height: 20),
               ElevatedButton(

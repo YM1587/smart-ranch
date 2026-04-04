@@ -65,15 +65,16 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'animal_id': _selectedAnimalId,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-        'weight_kg': double.tryParse(_weightController.text) ?? 0.0,
-        'body_condition_score': int.tryParse(_bcsController.text),
-      };
+      final record = WeightRecord(
+        id: 0,
+        animalId: _selectedAnimalId!,
+        date: DateTime.now().toIso8601String().split('T')[0],
+        weightKg: double.tryParse(_weightController.text) ?? 0.0,
+        bodyConditionScore: int.tryParse(_bcsController.text),
+      );
 
       try {
-        await ApiService.createWeightRecord(data);
+        await ApiService.createWeightRecord(record);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Weight record added successfully!')),
         );

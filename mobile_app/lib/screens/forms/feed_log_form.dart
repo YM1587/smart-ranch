@@ -50,16 +50,17 @@ class _FeedLogFormState extends State<FeedLogForm> {
         _isLoading = true;
       });
 
-      final data = {
-        'pen_id': _selectedPenId,
-        'feed_type': _feedType,
-        'quantity_kg': double.tryParse(_quantityController.text) ?? 0.0,
-        'cost_per_kg': double.tryParse(_costController.text) ?? 0.0,
-        'date': DateTime.now().toIso8601String().split('T')[0],
-      };
+      final log = FeedLog(
+        id: 0,
+        penId: _selectedPenId!,
+        date: DateTime.now().toIso8601String().split('T')[0],
+        feedType: _feedType,
+        quantityKg: double.tryParse(_quantityController.text) ?? 0.0,
+        cost: double.tryParse(_costController.text) ?? 0.0,
+      );
 
       try {
-        await ApiService.createFeedLog(data);
+        await ApiService.createFeedLog(log);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Feed log added successfully!')),
         );

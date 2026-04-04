@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, and_
 from typing import List
-from datetime import date
+from datetime import date, timedelta
 
 from database import get_db
 import models
@@ -224,3 +224,91 @@ async def get_pregnant_animals(
             "breeding_date": br.breeding_date
         } for a, br in result.all()
     ]
+
+@router.get("/breeding/due-soon")
+async def get_due_soon_animals(
+    farmer_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: models.Farmer = Depends(get_current_user)
+):
+    if current_user.farmer_id != farmer_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    due_soon_date = date.today() + timedelta(days=14) # Check next 2 weeks
+    query = select(models.Animal, models.BreedingRecord).join(
+        models.BreedingRecord, models.Animal.animal_id == models.BreedingRecord.female_id
+    ).where(
+        and_(
+            models.Animal.farmer_id == current_user.farmer_id,
+            models.BreedingRecord.pregnancy_status == "Pregnant",
+            models.BreedingRecord.actual_calving_date == None,
+            models.BreedingRecord.expected_calving_date <= due_soon_date
+        )
+    )
+    result = await db.execute(query)
+    
+    return [
+        {
+            "animal_id": a.animal_id,
+            "tag_number": a.tag_number,
+            "name": a.name,
+            "breeding_id": br.breeding_id,
+            "expected_calving_date": br.expected_calving_date,
+            "breeding_date": br.breeding_date
+        } for a, br in result.all()
+    ]
+
+@router.post("/breeding/{breeding_id}/pregnant")
+async def mark_breeding_pregnant(
+    breeding_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: models.Farmer = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(models.BreedingRecord)
+        .join(models.Animal, models.BreedingRecord.female_id == models.Animal.animal_id)
+        .where(
+            and_(
+                models.BreedingRecord.breeding_id == breeding_id,
+                models.Animal.farmer_id == current_user.farmer_id
+            )
+        )
+    )
+    record = result.scalars().first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Breeding record not found")
+    
+    record.pregnancy_status = "Pregnant"
+    # Estimate calving date (e.g. 283 days for cows)
+    record.expected_calving_date = record.breeding_date + timedelta(days=283)
+    
+    await db.commit()
+    await db.refresh(record)
+    return {"status": "success", "expected_calving_date": record.expected_calving_date}
+
+@router.post("/breeding/{breeding_id}/calved")
+async def mark_breeding_calved(
+    breeding_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: models.Farmer = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(models.BreedingRecord)
+        .join(models.Animal, models.BreedingRecord.female_id == models.Animal.animal_id)
+        .where(
+            and_(
+                models.BreedingRecord.breeding_id == breeding_id,
+                models.Animal.farmer_id == current_user.farmer_id
+            )
+        )
+    )
+    record = result.scalars().first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Breeding record not found")
+    
+    record.actual_calving_date = date.today()
+    record.pregnancy_status = "Calved"
+    
+    await db.commit()
+    await db.refresh(record)
+    return {"status": "success"}

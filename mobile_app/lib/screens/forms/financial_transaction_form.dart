@@ -38,13 +38,13 @@ class _FinancialTransactionFormState extends State<FinancialTransactionForm> {
       });
 
       final transaction = FinancialTransaction(
-        id: 0, // Backend assigns ID
+        id: 0,
+        farmerId: widget.farmerId,
         type: _type,
         category: _category,
         description: _descriptionController.text,
         amount: double.tryParse(_amountController.text) ?? 0.0,
         date: DateTime.now().toIso8601String().split('T')[0],
-        // farmer_id will be handled by ApiService or backend defaults
       );
 
       try {
